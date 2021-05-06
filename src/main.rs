@@ -6,6 +6,7 @@ mod helpers;
 
 
 fn main() {
+
     let start_time = SystemTime::now();
 
     let mut b = types::board::Board::default();
@@ -25,5 +26,4 @@ fn main() {
            println!("Error: {:?}", e);
        }
    }
-
 }

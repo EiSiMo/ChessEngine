@@ -6,6 +6,8 @@ use std::fmt::Formatter;
 use std::ops::Deref;
 use std::time::{Duration, SystemTime};
 use rand::seq::SliceRandom;
+use std::cmp;
+use std::cmp::max;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Board {
@@ -44,7 +46,8 @@ impl fmt::Display for Board {
             result.push_str("  ");
 
             for col_index in 0_u8..8_u8 {
-                let mask = 9223372036854775808 >> (line_index * 8 + col_index); // 1000000000000000000000000000000000000000000000000000000000000000
+                let first_field = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
+                let mask = first_field >> (line_index * 8 + col_index);
                 if self.withe_pawns & mask != 0 {
                     result.push_str("P")
                 } else if self.withe_bishops & mask != 0 {
@@ -103,7 +106,8 @@ impl Board {
             let mut current_not_empty: bool = true;
 
             for col_index in 0_u8..8_u8 {
-                let mask = 9223372036854775808 >> (line_index * 8 + col_index); // 1000000000000000000000000000000000000000000000000000000000000000
+                let first_field = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
+                let mask = first_field >> (line_index * 8 + col_index);
                 if figures & mask == 0 {
                     if result.len() == 0 {
                         result.push_str("0");
@@ -184,18 +188,18 @@ impl Board {
 impl Board {
     pub fn empty() -> Board {
         Board {
-            withe_pawns: 0,                     // 0000000000000000000000000000000000000000000000000000000000000000
-            withe_bishops: 0,                   // 0000000000000000000000000000000000000000000000000000000000000000
-            withe_knights: 0,                   // 0000000000000000000000000000000000000000000000000000000000000000
-            withe_rooks: 0,                     // 0000000000000000000000000000000000000000000000000000000000000000
-            withe_queens: 0,                    // 0000000000000000000000000000000000000000000000000000000000000000
-            withe_king: 0,                      // 0000000000000000000000000000000000000000000000000000000000000000
-            black_pawns: 0,                     // 0000000000000000000000000000000000000000000000000000000000000000
-            black_bishops: 0,                   // 0000000000000000000000000000000000000000000000000000000000000000
-            black_knights: 0,                   // 0000000000000000000000000000000000000000000000000000000000000000
-            black_rooks: 0,                     // 0000000000000000000000000000000000000000000000000000000000000000
-            black_queens: 0,                    // 0000000000000000000000000000000000000000000000000000000000000000
-            black_king: 0,                      // 0000000000000000000000000000000000000000000000000000000000000000
+            withe_pawns:   0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            withe_bishops: 0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            withe_knights: 0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            withe_rooks:   0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            withe_queens:  0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            withe_king:    0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            black_pawns:   0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            black_bishops: 0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            black_knights: 0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            black_rooks:   0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            black_queens:  0b0000000000000000000000000000000000000000000000000000000000000000_u64,
+            black_king:    0b0000000000000000000000000000000000000000000000000000000000000000_u64,
 
             // false if its blacks turn
             withes_turn: true,
@@ -205,18 +209,18 @@ impl Board {
 
     pub fn default() -> Board {
         Board {
-            withe_pawns: 65280,                 // 0000000000000000000000000000000000000000000000001111111100000000
-            withe_bishops: 36,                  // 0000000000000000000000000000000000000000000000000000000000100100
-            withe_knights: 66,                  // 0000000000000000000000000000000000000000000000000000000001000010
-            withe_rooks: 129,                   // 0000000000000000000000000000000000000000000000000000000010000001
-            withe_queens: 16,                   // 0000000000000000000000000000000000000000000000000000000000010000
-            withe_king: 8,                      // 0000000000000000000000000000000000000000000000000000000000001000
-            black_pawns: 71776119061217280,     // 0000000011111111000000000000000000000000000000000000000000000000
-            black_bishops: 2594073385365405696, // 0010010000000000000000000000000000000000000000000000000000000000
-            black_knights: 4755801206503243776, // 0100001000000000000000000000000000000000000000000000000000000000
-            black_rooks: 9295429630892703744,   // 1000000100000000000000000000000000000000000000000000000000000000
-            black_queens: 1152921504606846976,  // 0001000000000000000000000000000000000000000000000000000000000000
-            black_king: 576460752303423488,     // 0000100000000000000000000000000000000000000000000000000000000000
+            withe_pawns:   0b0000000000000000000000000000000000000000000000001111111100000000_u64,
+            withe_bishops: 0b0000000000000000000000000000000000000000000000000000000000100100_u64,
+            withe_knights: 0b0000000000000000000000000000000000000000000000000000000001000010_u64,
+            withe_rooks:   0b0000000000000000000000000000000000000000000000000000000010000001_u64,
+            withe_queens:  0b0000000000000000000000000000000000000000000000000000000000010000_u64,
+            withe_king:    0b0000000000000000000000000000000000000000000000000000000000001000_u64,
+            black_pawns:   0b0000000011111111000000000000000000000000000000000000000000000000_u64,
+            black_bishops: 0b0010010000000000000000000000000000000000000000000000000000000000_u64,
+            black_knights: 0b0100001000000000000000000000000000000000000000000000000000000000_u64,
+            black_rooks:   0b1000000100000000000000000000000000000000000000000000000000000000_u64,
+            black_queens:  0b0001000000000000000000000000000000000000000000000000000000000000_u64,
+            black_king:    0b0000100000000000000000000000000000000000000000000000000000000000_u64,
 
             withes_turn: true,
             next_turns_number: 1,
@@ -229,7 +233,7 @@ impl Board {
         // extract the position of the pieces
         let positions: Vec<char> = parts[0].replace("/", "").chars().collect();
         let mut board = Board::empty();
-        let mut mask: u64 = 9223372036854775808; // 1000000000000000000000000000000000000000000000000000000000000000
+        let mut mask: u64 = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
         for character in positions {
             match character {
                 '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' => {
@@ -285,7 +289,10 @@ impl Board {
 
         if self.withes_turn {
             for mut possible_move in possible_moves {
-                let score = possible_move.minimax(depth - 1);
+                let score = possible_move.minimax(
+                    depth - 1,
+                    -340282350000000000000000000000000000000_f32, // smallest f32
+                    340282350000000000000000000000000000000_f32);  // biggest f32
                 if score > best_score {
                     best_score = score;
                     best_move = possible_move;
@@ -293,7 +300,10 @@ impl Board {
             }
         } else {
             for mut possible_move in possible_moves {
-                let score = possible_move.minimax(depth - 1);
+                let score = possible_move.minimax(
+                    depth - 1,
+                    -340282350000000000000000000000000000000_f32, // smallest f32
+                    340282350000000000000000000000000000000_f32);  // biggest f32
                 if score < best_score {
                     best_score = score;
                     best_move = possible_move;
@@ -304,24 +314,44 @@ impl Board {
         best_move
     }
 
-    pub fn minimax(&mut self, depth: u8) -> f32 {
+    pub fn minimax(&mut self, depth: u8, mut alpha: f32, mut beta: f32) -> f32 {
         if depth == 0 {
             let score = self.evaluate();
             return score
         }
 
         let possible_moves = self.generate_possible_moves();
-        let mut scores: Vec<f32> = Vec::new();
-        for mut possible_move in possible_moves {
-            scores.push(possible_move.minimax(depth - 1))
-        }
-
-        scores.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
 
         if self.withes_turn {
-            scores[scores.len() - 1]
+            let mut best_score: f32 = -340282350000000000000000000000000000000_f32; //smallest f32
+            for mut possible_move in possible_moves {
+                let eval = possible_move.minimax(depth - 1, alpha, beta);
+                if eval > best_score {
+                    best_score = eval;
+                }
+                if eval > alpha {
+                    alpha = eval
+                }
+                if beta <= alpha {
+                    break;
+                }
+            }
+            best_score
         } else {
-            scores[0]
+            let mut best_score: f32 = 340282350000000000000000000000000000000_f32; // biggest f32
+            for mut possible_move in possible_moves {
+                let eval = possible_move.minimax(depth - 1, alpha, beta);
+                if eval < best_score {
+                    best_score = eval;
+                }
+                if eval < beta {
+                    beta = eval
+                }
+                if beta <= alpha {
+                    break;
+                }
+            }
+            best_score
         }
     }
 
@@ -359,8 +389,8 @@ impl Board {
         if self.withe_king | self.black_king != 0 {
             if self.withes_turn {
                 for field_index in 0_u8..64_u8 {
-                    let field: u64 = 9223372036854775808 >> field_index; // 1000000000000000000000000000000000000000000000000000000000000000
-
+                    let first_field = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
+                    let field = first_field >> field_index;
                     // WITHE PAWNS
                     // TODO en passant
                     // TODO capture promotion
@@ -369,7 +399,7 @@ impl Board {
                         if pawn != 0 {
                             // ONE STEP
                             // exclude pawns on last two ranks
-                            let mask_last: u64 = 18446462598732840960; // 1111111111111111000000000000000000000000000000000000000000000000
+                            let mask_last = 0b1111111111111111000000000000000000000000000000000000000000000000_u64;
                             let pawn_last_rank = mask_last & pawn;
                             // get the square to step on
                             let pawn_one_step = pawn << 8;
@@ -377,19 +407,44 @@ impl Board {
                             let pawn_one_step_blocked = figures & pawn_one_step;
                             // if the move is valid
                             if pawn_one_step_blocked == 0 && pawn_last_rank == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.withe_pawns |= pawn_one_step;
-                                board_move.next();
-                                moves.push(board_move);
+                                // PROMOTION
+                                // exclude pawns not in the pre last rank
+                                let mask_pre_last = 0b0000000011111111000000000000000000000000000000000000000000000000_u64;
+                                let pawn_pre_last = mask_pre_last & pawn;
+                                // if the move is valid
+                                if pawn_pre_last != 0 {
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_knights |= pawn_one_step;
+                                    board_move.next();
+                                    moves.push(board_move);
+
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_queens |= pawn_one_step;
+                                    board_move.next();
+                                    moves.push(board_move);
+                                } else {
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_pawns |= pawn_one_step;
+                                    board_move.next();
+                                    moves.push(board_move);
+                                }
                             }
 
                             // TWO STEP
                             // exclude pawns not on the starting rank
-                            let mask_second_rank: u64 = 65280; // 0000000000000000000000000000000000000000000000001111111100000000
+                            let mask_second_rank: u64 = 0b0000000000000000000000000000000000000000000000001111111100000000_u64;
                             let pawn_second_rank = pawn & mask_second_rank;
 
                             // get the square to jump over
@@ -415,14 +470,14 @@ impl Board {
 
                             // CAPTURE
                             // exclude pawn in the right border or last rank
-                            let mask_right = 18374969058471772417; // 1111111100000001000000010000000100000001000000010000000100000001
+                            let mask_right = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                             let pawn_not_right = !mask_right & pawn;
                             // exclude pawns with no enemy on the right diagonal square
                             let pawn_right_diagonal = pawn_not_right << 7;
                             let pawn_right_diagonal_enemy = pawn_right_diagonal & enemies;
 
                             // exclude pawns in the left border or last rank
-                            let mask_left = 18410856566090662016; // 1111111110000000100000001000000010000000100000001000000010000000
+                            let mask_left = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
                             let pawn_not_left = !mask_left & pawn;
                             // exclude pawns with no enemy on the left diagonal square
                             let pawn_left_diagonal = pawn_not_left << 9;
@@ -430,75 +485,85 @@ impl Board {
 
                             // if the move is valid
                             if pawn_right_diagonal_enemy != 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.withe_pawns |= pawn_right_diagonal_enemy;
-                                // delete the enemy piece
-                                board_move.delete_enemies(pawn_right_diagonal_enemy);
-                                board_move.next();
-                                moves.push(board_move);
+                                // diagonal promotion
+                                let mask_pre_last: u64 = 0b0000000011111111000000000000000000000000000000000000000000000000_u64;
+                                let pawn_pre_last = mask_pre_last & pawn;
+                                if pawn_pre_last != 0 {
+                                    // diagonal promotion capture
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_queens |= pawn_right_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_right_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_knights |= pawn_right_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_right_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                } else {
+                                    // diagonal capture
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_pawns |= pawn_right_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_right_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                }
                             }
                             if pawn_left_diagonal_enemy != 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.withe_pawns |= pawn_left_diagonal_enemy;
-                                // delete the enemy piece
-                                board_move.delete_enemies(pawn_left_diagonal_enemy);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
+                                let mask_pre_last = 0b0000000011111111000000000000000000000000000000000000000000000000_u64;
+                                let pawn_pre_last = mask_pre_last & pawn;
+                                if pawn_pre_last != 0 {
+                                    // diagonal promotion capture
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_queens |= pawn_left_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_left_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
 
-                            // PROMOTION
-                            // exclude pawns not in the pre last rank
-                            let mask_pre_last: u64 = 71776119061217280; // 0000000011111111000000000000000000000000000000000000000000000000
-                            let pawn_pre_last = mask_pre_last & pawn;
-                            // get the square to step on
-                            let pawn_promotion = pawn_pre_last << 8;
-                            // check if the square to step on is blocked
-                            let pawn_promotion_blocked = figures & pawn_promotion;
-                            // if the move is valid
-                            if pawn_promotion_blocked == 0 && pawn_pre_last != 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.withe_bishops |= pawn_promotion;
-                                board_move.next();
-                                moves.push(board_move);
-
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.withe_knights |= pawn_promotion;
-                                board_move.next();
-                                moves.push(board_move);
-
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.withe_rooks |= pawn_promotion;
-                                board_move.next();
-                                moves.push(board_move);
-
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.withe_queens |= pawn_promotion;
-                                board_move.next();
-                                moves.push(board_move);
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_knights |= pawn_left_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_left_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                } else {
+                                    // diagonal capture
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.withe_pawns |= pawn_left_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_left_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                }
                             }
                         }
                     }
@@ -513,7 +578,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let tl_mask: u64 = 18410856566090662016; // 1111111110000000100000001000000010000000100000001000000010000000
+                                let tl_mask: u64 = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
                                 let bishop_mask = tl_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -548,7 +613,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let tr_mask: u64 = 18374969058471772417; // 1111111100000001000000010000000100000001000000010000000100000001
+                                let tr_mask: u64 = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                                 let bishop_mask = tr_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -582,7 +647,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let bl_mask: u64 = 9259542123273814271; // 1000000010000000100000001000000010000000100000001000000011111111
+                                let bl_mask: u64 = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
                                 let bishop_mask = bl_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -616,7 +681,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 right column or 1 bot line
-                                let br_mask: u64 = 72340172838076927; // 0000000100000001000000010000000100000001000000010000000111111111
+                                let br_mask: u64 = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                                 let bishop_mask = br_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -652,7 +717,7 @@ impl Board {
                         if knight != 0 {
                             // TOP LEFT TOP JUMP
                             // exclude knights in 1 left column or 2 top lines
-                            let tlt_mask: u64 = 18446603888132915328; // 1111111111111111100000001000000010000000100000001000000010000000
+                            let tlt_mask = 0b1111111111111111100000001000000010000000100000001000000010000000_u64;
                             let knight_mask = tlt_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight << 17;
@@ -673,7 +738,7 @@ impl Board {
 
                             // TOP RIGHT TOP JUMP
                             // exclude knights in 1 right column or 2 top lines
-                            let trt_mask: u64 = 18446463702556279041; // 1111111111111111000000010000000100000001000000010000000100000001
+                            let trt_mask = 0b1111111111111111000000010000000100000001000000010000000100000001_u64;
                             let knight_mask = trt_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight << 15;
@@ -694,7 +759,7 @@ impl Board {
 
                             // TOP LEFT BOT JUMP
                             // exclude knights in 2 left columns or 1 top line
-                            let tlb_mask: u64 = 18428941609300181184; // 1111111111000000110000001100000011000000110000001100000011000000
+                            let tlb_mask = 0b1111111111000000110000001100000011000000110000001100000011000000_u64;
                             let knight_mask = tlb_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight << 10;
@@ -715,7 +780,7 @@ impl Board {
 
                             // TOP RIGHT BOT JUMP
                             // exclude knights in 2 right columns or 1 top line
-                            let trb_mask: u64 = 18375534216072069891; // 1111111100000011000000110000001100000011000000110000001100000011
+                            let trb_mask = 0b1111111100000011000000110000001100000011000000110000001100000011_u64;
                             let knight_mask = trb_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight << 6;
@@ -736,7 +801,7 @@ impl Board {
 
                             // BOT LEFT TOP JUMP
                             // exclude knights in 2 left columns or 1 bot line
-                            let blt_mask: u64 = 13889313184910721279; // 1100000011000000110000001100000011000000110000001100000011111111
+                            let blt_mask = 0b1100000011000000110000001100000011000000110000001100000011111111_u64;
                             let knight_mask = blt_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight >> 6;
@@ -757,7 +822,7 @@ impl Board {
 
                             // BOT RIGHT TOP JUMP
                             // exclude knights in 2 right columns or 1 bot line
-                            let brt_mask: u64 = 217020518514230271; // 0000001100000011000000110000001100000011000000110000001111111111
+                            let brt_mask = 0b0000001100000011000000110000001100000011000000110000001111111111_u64;
                             let knight_mask = brt_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight >> 10;
@@ -778,7 +843,7 @@ impl Board {
 
                             // BOT LEFT BOT JUMP
                             // exclude knights in 1 left column or 2 bot lines
-                            let blb_mask: u64 = 9259542123273846783; // 1000000010000000100000001000000010000000100000001111111111111111
+                            let blb_mask = 0b1000000010000000100000001000000010000000100000001111111111111111_u64;
                             let knight_mask = blb_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight >> 15;
@@ -799,7 +864,7 @@ impl Board {
 
                             // BOT RIGHT BOT JUMP
                             // exclude knights in 1 right column or 2 bot lines
-                            let brb_mask: u64 = 72340172838141951; // 0000000100000001000000010000000100000001000000011111111111111111
+                            let brb_mask = 0b0000000100000001000000010000000100000001000000011111111111111111_u64;
                             let knight_mask = brb_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight >> 17;
@@ -822,7 +887,7 @@ impl Board {
 
                     // WITHE ROOK
                     {
-                        let rook = self.withe_rooks & field; // 1000000000000000000000000000000000000000000000000000000000000000
+                        let rook = self.withe_rooks & field;
                         if rook != 0 {
                             // TOP
                             let mut rook_step = rook << 8;
@@ -830,7 +895,7 @@ impl Board {
                             let mut rook_last_step = rook;
                             loop {
                                 // exclude rooks in top line
-                                let tl_mask: u64 = 18374686479671623680; // 1111111100000000000000000000000000000000000000000000000000000000
+                                let tl_mask = 0b1111111100000000000000000000000000000000000000000000000000000000_u64;
                                 let rook_mask = tl_mask & rook_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = rook_step & allies;
@@ -865,7 +930,7 @@ impl Board {
                             let mut rook_last_step = rook;
                             loop {
                                 // exclude rooks in bot line
-                                let tr_mask: u64 = 255; // 0000000000000000000000000000000000000000000000000000000011111111
+                                let tr_mask = 0b0000000000000000000000000000000000000000000000000000000011111111_u64;
                                 let rook_mask = tr_mask & rook_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = rook_step & allies;
@@ -899,7 +964,7 @@ impl Board {
                             let mut rook_last_step = rook;
                             loop {
                                 // exclude rooks in left column
-                                let bl_mask: u64 = 9259542123273814144; // 1000000010000000100000001000000010000000100000001000000010000000
+                                let bl_mask = 0b1000000010000000100000001000000010000000100000001000000010000000_u64;
                                 let rook_mask = bl_mask & rook_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = rook_step & allies;
@@ -933,7 +998,7 @@ impl Board {
                             let mut rook_last_step = rook;
                             loop {
                                 // exclude rooks in right column
-                                let br_mask: u64 = 72340172838076673; // 0000000100000001000000010000000100000001000000010000000100000001
+                                let br_mask = 0b0000000100000001000000010000000100000001000000010000000100000001_u64;
                                 let rook_mask = br_mask & rook_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = rook_step & allies;
@@ -973,7 +1038,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 left column or 1 top line
-                                let tl_mask: u64 = 18410856566090662016; // 1111111110000000100000001000000010000000100000001000000010000000
+                                let tl_mask = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
                                 let queen_mask = tl_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1008,7 +1073,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 left column or 1 top line
-                                let tr_mask: u64 = 18374969058471772417; // 1111111100000001000000010000000100000001000000010000000100000001
+                                let tr_mask = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                                 let queen_mask = tr_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1042,7 +1107,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 left column or 1 top line
-                                let bl_mask: u64 = 9259542123273814271; // 1000000010000000100000001000000010000000100000001000000011111111
+                                let bl_mask = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
                                 let queen_mask = bl_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1076,7 +1141,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 right column or 1 bot line
-                                let br_mask: u64 = 72340172838076927; // 0000000100000001000000010000000100000001000000010000000111111111
+                                let br_mask: u64 = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                                 let queen_mask = br_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1110,7 +1175,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in top line
-                                let tl_mask: u64 = 18374686479671623680; // 1111111100000000000000000000000000000000000000000000000000000000
+                                let tl_mask = 0b1111111100000000000000000000000000000000000000000000000000000000_u64;
                                 let queen_mask = tl_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1145,7 +1210,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in bot line
-                                let tr_mask: u64 = 255; // 0000000000000000000000000000000000000000000000000000000011111111
+                                let tr_mask = 0b0000000000000000000000000000000000000000000000000000000011111111_u64;
                                 let queen_mask = tr_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1179,7 +1244,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in left column
-                                let bl_mask: u64 = 9259542123273814144; // 1000000010000000100000001000000010000000100000001000000010000000
+                                let bl_mask = 0b1000000010000000100000001000000010000000100000001000000010000000_u64;
                                 let queen_mask = bl_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1213,7 +1278,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in right column
-                                let br_mask: u64 = 72340172838076673; // 0000000100000001000000010000000100000001000000010000000100000001
+                                let br_mask = 0b0000000100000001000000010000000100000001000000010000000100000001_u64;
                                 let queen_mask = br_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1249,7 +1314,7 @@ impl Board {
                         if king != 0 {
                             // TOP LEFT DIAGONAL
                             // exclude kings in the left column and top line
-                            let mask: u64 = 18410856566090662016; // 1111111110000000100000001000000010000000100000001000000010000000
+                            let mask = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 9;
@@ -1268,7 +1333,7 @@ impl Board {
                             }
                             // TOP
                             // exclude kings in the top line
-                            let mask: u64 = 18374686479671623680; // 1111111100000000000000000000000000000000000000000000000000000000
+                            let mask = 0b1111111100000000000000000000000000000000000000000000000000000000_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 8;
@@ -1287,7 +1352,7 @@ impl Board {
                             }
                             // TOP RIGHT DIAGONAL
                             // exclude kings in the right column and top line
-                            let mask: u64 = 18374969058471772417; // 1111111100000001000000010000000100000001000000010000000100000001
+                            let mask: u64 = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 7;
@@ -1306,7 +1371,7 @@ impl Board {
                             }
                             // BOT LEFT DIAGONAL
                             // exclude kings in the left column and bot line
-                            let mask: u64 = 9259542123273814271; // 1000000010000000100000001000000010000000100000001000000011111111
+                            let mask = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king >> 7;
@@ -1325,7 +1390,7 @@ impl Board {
                             }
                             // BOT
                             // exclude kings in the bot line
-                            let mask: u64 = 255; // 0000000000000000000000000000000000000000000000000000000011111111
+                            let mask = 0b0000000000000000000000000000000000000000000000000000000011111111_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king >> 8;
@@ -1344,7 +1409,7 @@ impl Board {
                             }
                             // BOT RIGHT DIAGONAL
                             // exclude kings in the right column and bot line
-                            let mask: u64 = 72340172838076927; // 0000000100000001000000010000000100000001000000010000000111111111
+                            let mask = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king >> 9;
@@ -1363,7 +1428,7 @@ impl Board {
                             }
                             // LEFT
                             // exclude kings in the left column
-                            let mask: u64 = 9259542123273814144; // 1000000010000000100000001000000010000000100000001000000010000000
+                            let mask = 0b1000000010000000100000001000000010000000100000001000000010000000_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 1;
@@ -1382,7 +1447,7 @@ impl Board {
                             }
                             // RIGHT
                             // exclude kings in the right column
-                            let mask: u64 = 72340172838076673; // 0000000100000001000000010000000100000001000000010000000100000001
+                            let mask = 0b0000000100000001000000010000000100000001000000010000000100000001_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king >> 1;
@@ -1404,17 +1469,19 @@ impl Board {
                 }
             } else {
                 for field_index in 0_u8..64_u8 {
-                    let field: u64 = 9223372036854775808 >> field_index; // 1000000000000000000000000000000000000000000000000000000000000000
+                    let first_field = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
+                    let field: u64 = first_field >> field_index;
 
                     // BLACK PAWN
                     // TODO en passant
                     // TODO capture promotion
+                    // TODO MERGE ONE STEP AND PROMOTION
                     {
-                        let pawn = self.black_pawns & field; // 1000000000000000000000000000000000000000000000000000000000000000
+                        let pawn = self.black_pawns & field;
                         if pawn != 0 {
                             // ONE STEP
                             // exclude pawns on last two ranks
-                            let mask_last: u64 = 65535; // 0000000000000000000000000000000000000000000000001111111111111111
+                            let mask_last = 0b0000000000000000000000000000000000000000000000001111111111111111_u64;
                             let pawn_last_rank = mask_last & pawn;
                             // get the square to step on
                             let pawn_one_step = pawn >> 8;
@@ -1422,19 +1489,44 @@ impl Board {
                             let pawn_one_step_blocked = figures & pawn_one_step;
                             // if the move is valid
                             if pawn_one_step_blocked == 0 && pawn_last_rank == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.black_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.black_pawns |= pawn_one_step;
-                                board_move.next();
-                                moves.push(board_move);
+                                // PROMOTION
+                                // exclude pawns not in the pre last rank
+                                let mask_pre_last = 0b000000000000000000000000000000000000000000000000111111110000000_u64;
+                                let pawn_pre_last = mask_pre_last & pawn;
+                                // if the move is valid
+                                if pawn_pre_last != 0 {
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_knights |= pawn_one_step;
+                                    board_move.next();
+                                    moves.push(board_move);
+
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_queens |= pawn_one_step;
+                                    board_move.next();
+                                    moves.push(board_move);
+                                } else {
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_pawns |= pawn_one_step;
+                                    board_move.next();
+                                    moves.push(board_move);
+                                }
                             }
 
                             // TWO STEP
                             // exclude pawns not on the starting rank
-                            let mask_second_rank: u64 = 71776119061217280; // 0000000011111111000000000000000000000000000000000000000000000000
+                            let mask_second_rank = 0b0000000011111111000000000000000000000000000000000000000000000000_u64;
                             let pawn_second_rank = pawn & mask_second_rank;
 
                             // get the square to jump over
@@ -1460,89 +1552,99 @@ impl Board {
 
                             // CAPTURE
                             // exclude pawn in the right border or last rank
-                            let mask_right = 72340172838076927; // 0000000100000001000000010000000100000001000000010000000111111111
+                            let mask_right = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                             let pawn_not_right = !mask_right & pawn;
                             // exclude pawns with no enemy on the right diagonal square
                             let pawn_right_diagonal = pawn_not_right >> 9;
                             let pawn_right_diagonal_enemy = pawn_right_diagonal & enemies;
 
                             // exclude pawns in the left border or last rank
-                            let mask_left = 9259542123273814271; // 1000000010000000100000001000000010000000100000001000000011111111
+                            let mask_left = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
                             let pawn_not_left = !mask_left & pawn;
                             // exclude pawns with no enemy on the left diagonal square
                             let pawn_left_diagonal = pawn_not_left >> 7;
                             let pawn_left_diagonal_enemy = pawn_left_diagonal & enemies;
 
                             if pawn_right_diagonal_enemy != 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.black_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.black_pawns |= pawn_right_diagonal_enemy;
-                                // delete the enemy piece
-                                board_move.delete_enemies(pawn_right_diagonal_enemy);
-                                board_move.next();
-                                moves.push(board_move);
+                                // diagonal promotion
+                                let mask_pre_last = 0b000000000000000000000000000000000000000000000000111111110000000_u64;
+                                let pawn_pre_last = mask_pre_last & pawn;
+                                if pawn_pre_last != 0 {
+                                    // diagonal promotion capture
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_queens |= pawn_right_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_right_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_knights |= pawn_right_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_right_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                } else {
+                                    // diagonal capture
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_pawns |= pawn_right_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_right_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                }
                             }
                             if pawn_left_diagonal_enemy != 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.black_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.black_pawns |= pawn_left_diagonal_enemy;
-                                // delete the enemy piece
-                                board_move.delete_enemies(pawn_left_diagonal_enemy);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
+                                let mask_pre_last = 0b000000000000000000000000000000000000000000000000111111110000000_u64;
+                                let pawn_pre_last = mask_pre_last & pawn;
+                                if pawn_pre_last != 0 {
+                                    // diagonal promotion capture
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_queens |= pawn_left_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_left_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
 
-                            // PROMOTION
-                            // exclude pawns not in the pre last rank
-                            let mask_pre_last: u64 = 65280; // 000000000000000000000000000000000000000000000000111111110000000
-                            let pawn_pre_last = mask_pre_last & pawn;
-                            // get the square to step on
-                            let pawn_promotion = pawn_pre_last >> 8;
-                            // check if the square to step on is blocked
-                            let pawn_promotion_blocked = figures & pawn_promotion;
-                            // if the move is valid
-                            if pawn_promotion_blocked == 0 && pawn_pre_last != 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.black_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.black_bishops |= pawn_promotion;
-                                board_move.next();
-                                moves.push(board_move);
-
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.black_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.black_knights |= pawn_promotion;
-                                board_move.next();
-                                moves.push(board_move);
-
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.black_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.black_rooks |= pawn_promotion;
-                                board_move.next();
-                                moves.push(board_move);
-
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.black_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.black_queens |= pawn_promotion;
-                                board_move.next();
-                                moves.push(board_move);
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_knights |= pawn_left_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_left_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                } else {
+                                    // diagonal capture
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.black_pawns ^= pawn;
+                                    // insert the new piece
+                                    board_move.black_pawns |= pawn_left_diagonal;
+                                    // delete the enemy piece
+                                    board_move.delete_enemies(pawn_left_diagonal);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                }
                             }
                         }
                     }
@@ -1557,7 +1659,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let tl_mask: u64 = 18410856566090662016; // 1111111110000000100000001000000010000000100000001000000010000000
+                                let tl_mask = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
                                 let bishop_mask = tl_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -1592,7 +1694,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let tr_mask: u64 = 18374969058471772417; // 1111111100000001000000010000000100000001000000010000000100000001
+                                let tr_mask = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                                 let bishop_mask = tr_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -1626,7 +1728,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let bl_mask: u64 = 9259542123273814271; // 1000000010000000100000001000000010000000100000001000000011111111
+                                let bl_mask = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
                                 let bishop_mask = bl_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -1660,7 +1762,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 right column or 1 bot line
-                                let br_mask: u64 = 72340172838076927; // 0000000100000001000000010000000100000001000000010000000111111111
+                                let br_mask = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                                 let bishop_mask = br_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -1696,7 +1798,7 @@ impl Board {
                         if knight != 0 {
                             // TOP LEFT TOP JUMP
                             // exclude knights in 1 left column or 2 top lines
-                            let tlt_mask: u64 = 18446603888132915328; // 1111111111111111100000001000000010000000100000001000000010000000
+                            let tlt_mask = 0b1111111111111111100000001000000010000000100000001000000010000000_u64;
                             let knight_mask = tlt_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight << 17;
@@ -1717,7 +1819,7 @@ impl Board {
 
                             // TOP RIGHT TOP JUMP
                             // exclude knights in 1 right column or 2 top lines
-                            let trt_mask: u64 = 18446463702556279041; // 1111111111111111000000010000000100000001000000010000000100000001
+                            let trt_mask = 0b1111111111111111000000010000000100000001000000010000000100000001_u64;
                             let knight_mask = trt_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight << 15;
@@ -1738,7 +1840,7 @@ impl Board {
 
                             // TOP LEFT BOT JUMP
                             // exclude knights in 2 left columns or 1 top line
-                            let tlb_mask: u64 = 18428941609300181184; // 1111111111000000110000001100000011000000110000001100000011000000
+                            let tlb_mask = 0b1111111111000000110000001100000011000000110000001100000011000000_u64;
                             let knight_mask = tlb_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight << 10;
@@ -1759,7 +1861,7 @@ impl Board {
 
                             // TOP RIGHT BOT JUMP
                             // exclude knights in 2 right columns or 1 top line
-                            let trb_mask: u64 = 18375534216072069891; // 1111111100000011000000110000001100000011000000110000001100000011
+                            let trb_mask = 0b1111111100000011000000110000001100000011000000110000001100000011_u64;
                             let knight_mask = trb_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight << 6;
@@ -1780,7 +1882,7 @@ impl Board {
 
                             // BOT LEFT TOP JUMP
                             // exclude knights in 2 left columns or 1 bot line
-                            let blt_mask: u64 = 13889313184910721279; // 1100000011000000110000001100000011000000110000001100000011111111
+                            let blt_mask = 0b1100000011000000110000001100000011000000110000001100000011111111_u64;
                             let knight_mask = blt_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight >> 6;
@@ -1801,7 +1903,7 @@ impl Board {
 
                             // BOT RIGHT TOP JUMP
                             // exclude knights in 2 right columns or 1 bot line
-                            let brt_mask: u64 = 217020518514230271; // 0000001100000011000000110000001100000011000000110000001111111111
+                            let brt_mask = 0b0000001100000011000000110000001100000011000000110000001111111111_u64;
                             let knight_mask = brt_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight >> 10;
@@ -1822,7 +1924,7 @@ impl Board {
 
                             // BOT LEFT BOT JUMP
                             // exclude knights in 1 left column or 2 bot lines
-                            let blb_mask: u64 = 9259542123273846783; // 1000000010000000100000001000000010000000100000001111111111111111
+                            let blb_mask = 0b1000000010000000100000001000000010000000100000001111111111111111_u64;
                             let knight_mask = blb_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight >> 15;
@@ -1843,7 +1945,7 @@ impl Board {
 
                             // BOT RIGHT BOT JUMP
                             // exclude knights in 1 right column or 2 bot lines
-                            let brb_mask: u64 = 72340172838141951; // 0000000100000001000000010000000100000001000000011111111111111111
+                            let brb_mask = 0b0000000100000001000000010000000100000001000000011111111111111111_u64;
                             let knight_mask = brb_mask & knight;
                             // exclude fields blocked by allies
                             let knight_jump = knight >> 17;
@@ -1874,7 +1976,7 @@ impl Board {
                             let mut rook_last_step = rook;
                             loop {
                                 // exclude rooks in 1 left column or 1 top line
-                                let tl_mask: u64 = 18374686479671623680; // 1111111100000000000000000000000000000000000000000000000000000000
+                                let tl_mask = 0b1111111100000000000000000000000000000000000000000000000000000000_u64;
                                 let rook_mask = tl_mask & rook_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = rook_step & allies;
@@ -1909,7 +2011,7 @@ impl Board {
                             let mut rook_last_step = rook;
                             loop {
                                 // exclude rooks in 1 left column or 1 top line
-                                let tr_mask: u64 = 255; // 0000000000000000000000000000000000000000000000000000000011111111
+                                let tr_mask = 0b0000000000000000000000000000000000000000000000000000000011111111_u64;
                                 let rook_mask = tr_mask & rook_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = rook_step & allies;
@@ -1943,7 +2045,7 @@ impl Board {
                             let mut rook_last_step = rook;
                             loop {
                                 // exclude rooks in 1 left column or 1 top line
-                                let bl_mask: u64 = 9259542123273814144; // 1000000010000000100000001000000010000000100000001000000010000000
+                                let bl_mask = 0b1000000010000000100000001000000010000000100000001000000010000000_u64;
                                 let rook_mask = bl_mask & rook_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = rook_step & allies;
@@ -1977,7 +2079,7 @@ impl Board {
                             let mut rook_last_step = rook;
                             loop {
                                 // exclude rooks in 1 right column or 1 bot line
-                                let br_mask: u64 = 72340172838076673; // 0000000100000001000000010000000100000001000000010000000100000001
+                                let br_mask = 0b0000000100000001000000010000000100000001000000010000000100000001_u64;
                                 let rook_mask = br_mask & rook_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = rook_step & allies;
@@ -2017,7 +2119,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 left column or 1 top line
-                                let tl_mask: u64 = 18410856566090662016; // 1111111110000000100000001000000010000000100000001000000010000000
+                                let tl_mask = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
                                 let queen_mask = tl_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -2052,7 +2154,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 left column or 1 top line
-                                let tr_mask: u64 = 18374969058471772417; // 1111111100000001000000010000000100000001000000010000000100000001
+                                let tr_mask = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                                 let queen_mask = tr_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -2086,7 +2188,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 left column or 1 top line
-                                let bl_mask: u64 = 9259542123273814271; // 1000000010000000100000001000000010000000100000001000000011111111
+                                let bl_mask = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
                                 let queen_mask = bl_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -2120,7 +2222,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 right column or 1 bot line
-                                let br_mask: u64 = 72340172838076927; // 0000000100000001000000010000000100000001000000010000000111111111
+                                let br_mask = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                                 let queen_mask = br_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -2154,7 +2256,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in top line
-                                let tl_mask: u64 = 18374686479671623680; // 1111111100000000000000000000000000000000000000000000000000000000
+                                let tl_mask = 0b1111111100000000000000000000000000000000000000000000000000000000_u64;
                                 let queen_mask = tl_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -2189,7 +2291,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in bot line
-                                let tr_mask: u64 = 255; // 0000000000000000000000000000000000000000000000000000000011111111
+                                let tr_mask = 0b0000000000000000000000000000000000000000000000000000000011111111_u64;
                                 let queen_mask = tr_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -2223,7 +2325,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in left column
-                                let bl_mask: u64 = 9259542123273814144; // 1000000010000000100000001000000010000000100000001000000010000000
+                                let bl_mask = 0b1000000010000000100000001000000010000000100000001000000010000000_u64;
                                 let queen_mask = bl_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -2257,7 +2359,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in right column
-                                let br_mask: u64 = 72340172838076673; // 0000000100000001000000010000000100000001000000010000000100000001
+                                let br_mask = 0b0000000100000001000000010000000100000001000000010000000100000001_u64;
                                 let queen_mask = br_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -2293,7 +2395,7 @@ impl Board {
                         if king != 0 {
                             // TOP LEFT DIAGONAL
                             // exclude kings in the left column and top line
-                            let mask: u64 = 18410856566090662016; // 1111111110000000100000001000000010000000100000001000000010000000
+                            let mask = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 9;
@@ -2312,7 +2414,7 @@ impl Board {
                             }
                             // TOP
                             // exclude kings in the top line
-                            let mask: u64 = 18374686479671623680; // 1111111100000000000000000000000000000000000000000000000000000000
+                            let mask = 0b1111111100000000000000000000000000000000000000000000000000000000_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 8;
@@ -2331,7 +2433,7 @@ impl Board {
                             }
                             // TOP RIGHT DIAGONAL
                             // exclude kings in the right column and top line
-                            let mask: u64 = 18374969058471772417; // 1111111100000001000000010000000100000001000000010000000100000001
+                            let mask = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 7;
@@ -2350,7 +2452,7 @@ impl Board {
                             }
                             // BOT LEFT DIAGONAL
                             // exclude kings in the left column and bot line
-                            let mask: u64 = 9259542123273814271; // 1000000010000000100000001000000010000000100000001000000011111111
+                            let mask = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king >> 7;
@@ -2369,7 +2471,7 @@ impl Board {
                             }
                             // BOT
                             // exclude kings in the bot line
-                            let mask: u64 = 255; // 0000000000000000000000000000000000000000000000000000000011111111
+                            let mask = 0b0000000000000000000000000000000000000000000000000000000011111111_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king >> 8;
@@ -2388,7 +2490,7 @@ impl Board {
                             }
                             // BOT RIGHT DIAGONAL
                             // exclude kings in the right column and bot line
-                            let mask: u64 = 72340172838076927; // 0000000100000001000000010000000100000001000000010000000111111111
+                            let mask = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king >> 9;
@@ -2407,7 +2509,7 @@ impl Board {
                             }
                             // LEFT
                             // exclude kings in the left column
-                            let mask: u64 = 9259542123273814144; // 1000000010000000100000001000000010000000100000001000000010000000
+                            let mask = 0b1000000010000000100000001000000010000000100000001000000010000000_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 1;
@@ -2426,7 +2528,7 @@ impl Board {
                             }
                             // RIGHT
                             // exclude kings in the right column
-                            let mask: u64 = 72340172838076673; // 0000000100000001000000010000000100000001000000010000000100000001
+                            let mask = 0b0000000100000001000000010000000100000001000000010000000100000001_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king >> 1;
