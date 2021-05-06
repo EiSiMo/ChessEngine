@@ -26,7 +26,7 @@ pub struct Board {
 
     // false when it's blacks turn
     withes_turn: bool,
-    next_turns_number: u32,
+    next_turns_number: u16,
 }
 
 // board representation
@@ -102,8 +102,8 @@ impl Board {
         // insert the positions of the pieces
         let figures = self.get_figures();
         for line_index in 0_u8..8_u8 {
-            let mut continuous_empty: u8 = 0;
-            let mut current_not_empty: bool = true;
+            let mut continuous_empty = 0_u8;
+            let mut current_not_empty = true;
 
             for col_index in 0_u8..8_u8 {
                 let first_field = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
@@ -233,7 +233,7 @@ impl Board {
         // extract the position of the pieces
         let positions: Vec<char> = parts[0].replace("/", "").chars().collect();
         let mut board = Board::empty();
-        let mut mask: u64 = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
+        let mut mask = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
         for character in positions {
             match character {
                 '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' => {
@@ -284,15 +284,15 @@ impl Board {
     pub fn move_best(&mut self, depth: u8) -> Board {
         let mut possible_moves = self.generate_possible_moves();
 
-        let mut best_score: f32 = possible_moves[0].evaluate();
-        let mut best_move: Board = possible_moves[0];
+        let mut best_score = possible_moves[0].evaluate();
+        let mut best_move = possible_moves[0];
 
         if self.withes_turn {
             for mut possible_move in possible_moves {
                 let score = possible_move.minimax(
                     depth - 1,
-                    -340282350000000000000000000000000000000_f32, // smallest f32
-                    340282350000000000000000000000000000000_f32);  // biggest f32
+                    f32::MIN,
+                    f32::MAX);
                 if score > best_score {
                     best_score = score;
                     best_move = possible_move;
@@ -302,8 +302,8 @@ impl Board {
             for mut possible_move in possible_moves {
                 let score = possible_move.minimax(
                     depth - 1,
-                    -340282350000000000000000000000000000000_f32, // smallest f32
-                    340282350000000000000000000000000000000_f32);  // biggest f32
+                    f32::MIN,
+                    f32::MAX);
                 if score < best_score {
                     best_score = score;
                     best_move = possible_move;
@@ -323,7 +323,7 @@ impl Board {
         let possible_moves = self.generate_possible_moves();
 
         if self.withes_turn {
-            let mut best_score: f32 = -340282350000000000000000000000000000000_f32; //smallest f32
+            let mut best_score = f32::MIN;
             for mut possible_move in possible_moves {
                 let eval = possible_move.minimax(depth - 1, alpha, beta);
                 if eval > best_score {
@@ -338,7 +338,7 @@ impl Board {
             }
             best_score
         } else {
-            let mut best_score: f32 = 340282350000000000000000000000000000000_f32; // biggest f32
+            let mut best_score = f32::MAX;
             for mut possible_move in possible_moves {
                 let eval = possible_move.minimax(depth - 1, alpha, beta);
                 if eval < best_score {
@@ -444,7 +444,7 @@ impl Board {
 
                             // TWO STEP
                             // exclude pawns not on the starting rank
-                            let mask_second_rank: u64 = 0b0000000000000000000000000000000000000000000000001111111100000000_u64;
+                            let mask_second_rank = 0b0000000000000000000000000000000000000000000000001111111100000000_u64;
                             let pawn_second_rank = pawn & mask_second_rank;
 
                             // get the square to jump over
@@ -486,7 +486,7 @@ impl Board {
                             // if the move is valid
                             if pawn_right_diagonal_enemy != 0 {
                                 // diagonal promotion
-                                let mask_pre_last: u64 = 0b0000000011111111000000000000000000000000000000000000000000000000_u64;
+                                let mask_pre_last = 0b0000000011111111000000000000000000000000000000000000000000000000_u64;
                                 let pawn_pre_last = mask_pre_last & pawn;
                                 if pawn_pre_last != 0 {
                                     // diagonal promotion capture
@@ -578,7 +578,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let tl_mask: u64 = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
+                                let tl_mask = 0b1111111110000000100000001000000010000000100000001000000010000000_u64;
                                 let bishop_mask = tl_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -613,7 +613,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let tr_mask: u64 = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
+                                let tr_mask = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                                 let bishop_mask = tr_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -647,7 +647,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 left column or 1 top line
-                                let bl_mask: u64 = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
+                                let bl_mask = 0b1000000010000000100000001000000010000000100000001000000011111111_u64;
                                 let bishop_mask = bl_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -681,7 +681,7 @@ impl Board {
                             let mut bishop_last_step = bishop;
                             loop {
                                 // exclude bishops in 1 right column or 1 bot line
-                                let br_mask: u64 = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
+                                let br_mask = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                                 let bishop_mask = br_mask & bishop_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = bishop_step & allies;
@@ -1141,7 +1141,7 @@ impl Board {
                             let mut queen_last_step = queen;
                             loop {
                                 // exclude queens in 1 right column or 1 bot line
-                                let br_mask: u64 = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
+                                let br_mask = 0b0000000100000001000000010000000100000001000000010000000111111111_u64;
                                 let queen_mask = br_mask & queen_last_step;
                                 // exclude field blocked by allies
                                 let step_blocked = queen_step & allies;
@@ -1352,7 +1352,7 @@ impl Board {
                             }
                             // TOP RIGHT DIAGONAL
                             // exclude kings in the right column and top line
-                            let mask: u64 = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
+                            let mask = 0b1111111100000001000000010000000100000001000000010000000100000001_u64;
                             let king_mask = mask & king;
                             // exclude field blocked by allies
                             let king_step = king << 7;

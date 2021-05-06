@@ -10,7 +10,7 @@ fn main() {
     let start_time = SystemTime::now();
 
     let mut b = types::board::Board::default();
-    let depth = 3_u8;
+    let depth = 9_u8;
     let amount = 20_u8;
     for _ in 0..amount {
         b = b.move_best(depth);
