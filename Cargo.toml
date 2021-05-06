@@ -1,0 +1,10 @@
+[package]
+name = "ChessEngine"
+version = "0.1.0"
+authors = ["Moritz Eigenauer <moritz.eigenauer@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand = "0.8.0"
