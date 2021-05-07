@@ -310,7 +310,6 @@ impl Board {
                 }
             }
         }
-
         best_move
     }
 
@@ -392,8 +391,6 @@ impl Board {
                     let first_field = 0b1000000000000000000000000000000000000000000000000000000000000000_u64;
                     let field = first_field >> field_index;
                     // WITHE PAWNS
-                    // TODO en passant
-                    // TODO capture promotion
                     {
                         let pawn = self.withe_pawns & field;
                         if pawn != 0 {
@@ -440,32 +437,6 @@ impl Board {
                                     board_move.next();
                                     moves.push(board_move);
                                 }
-                            }
-
-                            // TWO STEP
-                            // exclude pawns not on the starting rank
-                            let mask_second_rank = 0b0000000000000000000000000000000000000000000000001111111100000000_u64;
-                            let pawn_second_rank = pawn & mask_second_rank;
-
-                            // get the square to jump over
-                            let pawn_jump = pawn_second_rank << 8;
-                            // check if the square to jump over is blocked
-                            let pawn_jump_blocked = figures & pawn_jump;
-                            // get the square to step on
-                            let pawn_two_step = pawn_second_rank << 16;
-                            // check if the square to step on is blocked
-                            let pawn_two_step_blocked = figures & pawn_two_step;
-
-                            // if the move is valid
-                            if pawn_second_rank != 0 && pawn_two_step_blocked == 0 && pawn_jump_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_pawns ^= pawn;
-                                // insert the new piece
-                                board_move.withe_pawns |= pawn_two_step;
-                                board_move.next();
-                                moves.push(board_move);
                             }
 
                             // CAPTURE
@@ -565,6 +536,32 @@ impl Board {
                                     moves.push(board_move);
                                 }
                             }
+
+                            // TWO STEP
+                            // exclude pawns not on the starting rank
+                            let mask_second_rank = 0b0000000000000000000000000000000000000000000000001111111100000000_u64;
+                            let pawn_second_rank = pawn & mask_second_rank;
+
+                            // get the square to jump over
+                            let pawn_jump = pawn_second_rank << 8;
+                            // check if the square to jump over is blocked
+                            let pawn_jump_blocked = figures & pawn_jump;
+                            // get the square to step on
+                            let pawn_two_step = pawn_second_rank << 16;
+                            // check if the square to step on is blocked
+                            let pawn_two_step_blocked = figures & pawn_two_step;
+
+                            // if the move is valid
+                            if pawn_second_rank != 0 && pawn_two_step_blocked == 0 && pawn_jump_blocked == 0 {
+                                // create a copy of the current board
+                                let mut board_move = self.clone();
+                                // delete the old piece
+                                board_move.withe_pawns ^= pawn;
+                                // insert the new piece
+                                board_move.withe_pawns |= pawn_two_step;
+                                board_move.next();
+                                moves.push(board_move);
+                            }
                         }
                     }
 
@@ -589,16 +586,14 @@ impl Board {
                                     board_move.withe_bishops ^= bishop;
                                     // insert the new piece
                                     board_move.withe_bishops |= bishop_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(bishop_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it break the loop
                                     let enemy_exists = enemies & bishop_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(bishop_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     bishop_last_step = bishop_step;
                                     bishop_step <<= 9;
                                 } else {
@@ -624,16 +619,14 @@ impl Board {
                                     board_move.withe_bishops ^= bishop;
                                     // insert the new piece
                                     board_move.withe_bishops |= bishop_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(bishop_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it break the loop
                                     let enemy_exists = enemies & bishop_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(bishop_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     bishop_last_step = bishop_step;
                                     bishop_step <<= 7;
                                 } else {
@@ -658,16 +651,14 @@ impl Board {
                                     board_move.withe_bishops ^= bishop;
                                     // insert the new piece
                                     board_move.withe_bishops |= bishop_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(bishop_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & bishop_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(bishop_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     bishop_last_step = bishop_step;
                                     bishop_step >>= 7;
                                 } else {
@@ -692,16 +683,14 @@ impl Board {
                                     board_move.withe_bishops ^= bishop;
                                     // insert the new piece
                                     board_move.withe_bishops |= bishop_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(bishop_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & bishop_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(bishop_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     bishop_last_step = bishop_step;
                                     bishop_step >>= 9;
                                 } else {
@@ -906,16 +895,15 @@ impl Board {
                                     board_move.withe_rooks ^= rook;
                                     // insert the new piece
                                     board_move.withe_rooks |= rook_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(rook_step);
+                                    // if enemy piece existing delete it and break the loop
+                                    let enemy_exists = enemies & rook_step;
+                                    if enemy_exists != 0 {
+                                        board_move.delete_enemies(rook_step);
+                                        break;
+                                    }
                                     board_move.next();
                                     moves.push(board_move);
 
-                                    // if enemy piece existed, break the loop
-                                    let enemy_exists = enemies & rook_step;
-                                    if enemy_exists != 0 {
-                                        break;
-                                    }
                                     rook_last_step = rook_step;
                                     rook_step <<= 8;
                                 } else {
@@ -941,16 +929,14 @@ impl Board {
                                     board_move.withe_rooks ^= rook;
                                     // insert the new piece
                                     board_move.withe_rooks |= rook_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(rook_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & rook_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(rook_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     rook_last_step = rook_step;
                                     rook_step >>= 8;
                                 } else {
@@ -975,16 +961,14 @@ impl Board {
                                     board_move.withe_rooks ^= rook;
                                     // insert the new piece
                                     board_move.withe_rooks |= rook_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(rook_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & rook_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(rook_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     rook_last_step = rook_step;
                                     rook_step <<= 1;
                                 } else {
@@ -1009,16 +993,14 @@ impl Board {
                                     board_move.withe_rooks ^= rook;
                                     // insert the new piece
                                     board_move.withe_rooks |= rook_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(rook_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & rook_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(rook_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     rook_last_step = rook_step;
                                     rook_step >>= 1;
                                 } else {
@@ -1473,9 +1455,6 @@ impl Board {
                     let field: u64 = first_field >> field_index;
 
                     // BLACK PAWN
-                    // TODO en passant
-                    // TODO capture promotion
-                    // TODO MERGE ONE STEP AND PROMOTION
                     {
                         let pawn = self.black_pawns & field;
                         if pawn != 0 {
@@ -1670,16 +1649,14 @@ impl Board {
                                     board_move.black_bishops ^= bishop;
                                     // insert the new piece
                                     board_move.black_bishops |= bishop_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(bishop_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & bishop_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(bishop_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     bishop_last_step = bishop_step;
                                     bishop_step <<= 9;
                                 } else {
@@ -1705,16 +1682,14 @@ impl Board {
                                     board_move.black_bishops ^= bishop;
                                     // insert the new piece
                                     board_move.black_bishops |= bishop_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(bishop_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & bishop_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(bishop_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     bishop_last_step = bishop_step;
                                     bishop_step <<= 7;
                                 } else {
@@ -1739,16 +1714,14 @@ impl Board {
                                     board_move.black_bishops ^= bishop;
                                     // insert the new piece
                                     board_move.black_bishops |= bishop_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(bishop_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & bishop_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(bishop_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     bishop_last_step = bishop_step;
                                     bishop_step >>= 7;
                                 } else {
@@ -1773,16 +1746,14 @@ impl Board {
                                     board_move.black_bishops ^= bishop;
                                     // insert the new piece
                                     board_move.black_bishops |= bishop_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(bishop_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & bishop_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(bishop_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     bishop_last_step = bishop_step;
                                     bishop_step >>= 9;
                                 } else {
@@ -1987,16 +1958,14 @@ impl Board {
                                     board_move.black_rooks ^= rook;
                                     // insert the new piece
                                     board_move.black_rooks |= rook_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(rook_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & rook_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(rook_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     rook_last_step = rook_step;
                                     rook_step <<= 8;
                                 } else {
@@ -2022,16 +1991,14 @@ impl Board {
                                     board_move.black_rooks ^= rook;
                                     // insert the new piece
                                     board_move.black_rooks |= rook_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(rook_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete and break the loop
                                     let enemy_exists = enemies & rook_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(rook_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     rook_last_step = rook_step;
                                     rook_step >>= 8;
                                 } else {
@@ -2056,16 +2023,14 @@ impl Board {
                                     board_move.black_rooks ^= rook;
                                     // insert the new piece
                                     board_move.black_rooks |= rook_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(rook_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & rook_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(rook_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     rook_last_step = rook_step;
                                     rook_step <<= 1;
                                 } else {
@@ -2090,16 +2055,14 @@ impl Board {
                                     board_move.black_rooks ^= rook;
                                     // insert the new piece
                                     board_move.black_rooks |= rook_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(rook_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it break the loop
                                     let enemy_exists = enemies & rook_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(rook_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     rook_last_step = rook_step;
                                     rook_step >>= 1;
                                 } else {
@@ -2130,16 +2093,14 @@ impl Board {
                                     board_move.black_queens ^= queen;
                                     // insert the new piece
                                     board_move.black_queens |= queen_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(queen_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
                                     // if enemy piece existed, break the loop
                                     let enemy_exists = enemies & queen_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(queen_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     queen_last_step = queen_step;
                                     queen_step <<= 9;
                                 } else {
@@ -2165,16 +2126,14 @@ impl Board {
                                     board_move.black_queens ^= queen;
                                     // insert the new piece
                                     board_move.black_queens |= queen_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(queen_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & queen_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(queen_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     queen_last_step = queen_step;
                                     queen_step <<= 7;
                                 } else {
@@ -2199,16 +2158,14 @@ impl Board {
                                     board_move.black_queens ^= queen;
                                     // insert the new piece
                                     board_move.black_queens |= queen_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(queen_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & queen_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(queen_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     queen_last_step = queen_step;
                                     queen_step >>= 7;
                                 } else {
@@ -2233,16 +2190,14 @@ impl Board {
                                     board_move.black_queens ^= queen;
                                     // insert the new piece
                                     board_move.black_queens |= queen_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(queen_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & queen_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(queen_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     queen_last_step = queen_step;
                                     queen_step >>= 9;
                                 } else {
@@ -2267,16 +2222,14 @@ impl Board {
                                     board_move.black_queens ^= queen;
                                     // insert the new piece
                                     board_move.black_queens |= queen_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(queen_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & queen_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(queen_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     queen_last_step = queen_step;
                                     queen_step <<= 8;
                                 } else {
@@ -2302,16 +2255,14 @@ impl Board {
                                     board_move.black_queens ^= queen;
                                     // insert the new piece
                                     board_move.black_queens |= queen_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(queen_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & queen_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(queen_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     queen_last_step = queen_step;
                                     queen_step >>= 8;
                                 } else {
@@ -2336,16 +2287,14 @@ impl Board {
                                     board_move.black_queens ^= queen;
                                     // insert the new piece
                                     board_move.black_queens |= queen_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(queen_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it and break the loop
                                     let enemy_exists = enemies & queen_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(queen_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     queen_last_step = queen_step;
                                     queen_step <<= 1;
                                 } else {
@@ -2370,16 +2319,14 @@ impl Board {
                                     board_move.black_queens ^= queen;
                                     // insert the new piece
                                     board_move.black_queens |= queen_step;
-                                    // remove enemy piece if existing
-                                    board_move.delete_enemies(queen_step);
-                                    board_move.next();
-                                    moves.push(board_move);
-
-                                    // if enemy piece existed, break the loop
+                                    // if enemy piece exists delete it break the loop
                                     let enemy_exists = enemies & queen_step;
                                     if enemy_exists != 0 {
+                                        board_move.delete_enemies(queen_step);
                                         break;
                                     }
+                                    board_move.next();
+                                    moves.push(board_move);
                                     queen_last_step = queen_step;
                                     queen_step >>= 1;
                                 } else {
