@@ -12,7 +12,7 @@ fn main() {
     let depth = 3_u8;
     let amount = 20_u8;
     for _ in 0..amount {
-        b = b.move_best(depth);
+        b = b.minimax(depth, f32::MIN, f32::MAX).0;
         println!("{}", b.as_fen());
     }
 

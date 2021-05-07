@@ -280,7 +280,7 @@ impl Board {
         let random_move = possible_moves.choose(&mut rand::thread_rng());
         *random_move.unwrap()
     }
-
+/*
     pub fn move_best(&mut self, depth: u8) -> Board {
         let mut possible_moves = self.generate_possible_moves();
 
@@ -312,21 +312,25 @@ impl Board {
         }
         best_move
     }
-
-    pub fn minimax(&mut self, depth: u8, mut alpha: f32, mut beta: f32) -> f32 {
+*/
+    pub fn minimax(&mut self, depth: u8, mut alpha: f32, mut beta: f32) -> (Board, f32) {
         if depth == 0 {
             let score = self.evaluate();
-            return score
+            return (*self, score)
         }
 
-        let possible_moves = self.generate_possible_moves();
+        let mut possible_moves = self.generate_possible_moves();
+
+        let mut best_score = possible_moves[0].evaluate();
+        let mut best_move = possible_moves[0];
 
         if self.withes_turn {
-            let mut best_score = f32::MIN;
             for mut possible_move in possible_moves {
-                let eval = possible_move.minimax(depth - 1, alpha, beta);
+                let result = possible_move.minimax(depth - 1, alpha, beta);
+                let eval = result.1;
                 if eval > best_score {
                     best_score = eval;
+                    best_move = possible_move;
                 }
                 if eval > alpha {
                     alpha = eval
@@ -335,13 +339,14 @@ impl Board {
                     break;
                 }
             }
-            best_score
+            (best_move, best_score)
         } else {
-            let mut best_score = f32::MAX;
             for mut possible_move in possible_moves {
-                let eval = possible_move.minimax(depth - 1, alpha, beta);
+                let result = possible_move.minimax(depth - 1, alpha, beta);
+                let eval = result.1;
                 if eval < best_score {
                     best_score = eval;
+                    best_move = possible_move;
                 }
                 if eval < beta {
                     beta = eval
@@ -350,7 +355,7 @@ impl Board {
                     break;
                 }
             }
-            best_score
+            (best_move, best_score)
         }
     }
 
