@@ -280,39 +280,7 @@ impl Board {
         let random_move = possible_moves.choose(&mut rand::thread_rng());
         *random_move.unwrap()
     }
-/*
-    pub fn move_best(&mut self, depth: u8) -> Board {
-        let mut possible_moves = self.generate_possible_moves();
 
-        let mut best_score = possible_moves[0].evaluate();
-        let mut best_move = possible_moves[0];
-
-        if self.withes_turn {
-            for mut possible_move in possible_moves {
-                let score = possible_move.minimax(
-                    depth - 1,
-                    f32::MIN,
-                    f32::MAX);
-                if score > best_score {
-                    best_score = score;
-                    best_move = possible_move;
-                }
-            }
-        } else {
-            for mut possible_move in possible_moves {
-                let score = possible_move.minimax(
-                    depth - 1,
-                    f32::MIN,
-                    f32::MAX);
-                if score < best_score {
-                    best_score = score;
-                    best_move = possible_move;
-                }
-            }
-        }
-        best_move
-    }
-*/
     pub fn minimax(&mut self, depth: u8, mut alpha: f32, mut beta: f32) -> (Board, f32) {
         if depth == 0 {
             let score = self.evaluate();
