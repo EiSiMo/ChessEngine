@@ -6,8 +6,8 @@ use std::fmt::Formatter;
 use std::ops::Deref;
 use std::time::{Duration, SystemTime};
 use rand::seq::SliceRandom;
-use std::cmp;
-use std::cmp::max;
+use std::cmp::{max, min};
+
 
 #[derive(Debug, Copy, Clone)]
 pub struct Board {
@@ -281,7 +281,7 @@ impl Board {
         *random_move.unwrap()
     }
 
-    pub fn minimax(&mut self, depth: u8, mut alpha: f32, mut beta: f32) -> (Board, f32) {
+    pub fn minimax(&mut self, depth: u8, mut alpha: i32, mut beta: i32) -> (Board, i32) {
         if depth == 0 {
             let score = self.evaluate();
             return (*self, score)
@@ -289,6 +289,7 @@ impl Board {
 
         let mut possible_moves = self.generate_possible_moves();
 
+        // TODO handle index out of bounds
         let mut best_score = possible_moves[0].evaluate();
         let mut best_move = possible_moves[0];
 
@@ -300,9 +301,7 @@ impl Board {
                     best_score = eval;
                     best_move = possible_move;
                 }
-                if eval > alpha {
-                    alpha = eval
-                }
+                alpha = max(eval, alpha);
                 if beta <= alpha {
                     break;
                 }
@@ -316,9 +315,7 @@ impl Board {
                     best_score = eval;
                     best_move = possible_move;
                 }
-                if eval < beta {
-                    beta = eval
-                }
+                beta = min(eval, beta);
                 if beta <= alpha {
                     break;
                 }
@@ -327,25 +324,48 @@ impl Board {
         }
     }
 
-    pub fn evaluate(&mut self) -> f32 {
+    pub fn evaluate(&mut self) -> i32 {
         /// positive: withe is better
         /// negative: black is better
 
-        let mut score: f32 = 0_f32;
-        for shift in 0_u8..64_u8 {
-            score += (self.withe_pawns >> shift & 1) as f32;
-            score += (self.withe_bishops >> shift & 1 * 3) as f32;
-            score += (self.withe_knights >> shift & 1 * 3) as f32;
-            score += (self.withe_rooks >> shift & 1 * 5) as f32;
-            score += (self.withe_queens >> shift & 1 * 9) as f32;
-            score += (self.black_king >> shift & 1 * 1024) as f32;
-            score -= (self.black_pawns >> shift & 1) as f32;
-            score -= (self.black_bishops >> shift & 1 * 3) as f32;
-            score -= (self.black_knights >> shift & 1 * 3) as f32;
-            score -= (self.black_rooks >> shift & 1 * 5) as f32;
-            score -= (self.black_queens >> shift & 1 * 9) as f32;
-            score -= (self.black_king >> shift & 1 * 1024) as f32;
-        }
+        const PAWN_MULTIPLIER: i32 = 100;
+        const BISHOP_MULTIPLIER: i32 = 300;
+        const KNIGHT_MULTIPLIER: i32 = 300;
+        const ROOK_MULTIPLIER: i32 = 500;
+        const QUEEN_MULTIPLIER: i32 = 900;
+        const KING_MULTIPLIER: i32 = 100000;
+
+        let withe_pawn_amount = self.withe_pawns.count_ones() as i32;
+        let withe_bishop_amount = self.withe_bishops.count_ones() as i32;
+        let withe_knight_amount = self.withe_knights.count_ones() as i32;
+        let withe_rook_amount = self.withe_rooks.count_ones() as i32;
+        let withe_queen_amount = self.withe_queens.count_ones() as i32;
+        let withe_king_amount = self.withe_king.count_ones() as i32;
+
+        let black_pawn_amount = self.black_pawns.count_ones() as i32;
+        let black_bishop_amount = self.black_bishops.count_ones() as i32;
+        let black_knight_amount = self.black_knights.count_ones() as i32;
+        let black_rook_amount = self.black_rooks.count_ones() as i32;
+        let black_queen_amount = self.black_queens.count_ones() as i32;
+        let black_king_amount = self.black_king.count_ones() as i32;
+
+        // TODO
+        // https://adamberent.com/2019/03/02/piece-square-table/
+
+        let mut score = 0_i32;
+        score += withe_pawn_amount * PAWN_MULTIPLIER;
+        score += withe_bishop_amount * BISHOP_MULTIPLIER;
+        score += withe_knight_amount * KNIGHT_MULTIPLIER;
+        score += withe_rook_amount * ROOK_MULTIPLIER;
+        score += withe_queen_amount * QUEEN_MULTIPLIER;
+        score += withe_king_amount * KING_MULTIPLIER;
+        score -= black_pawn_amount * PAWN_MULTIPLIER;
+        score -= black_bishop_amount * BISHOP_MULTIPLIER;
+        score -= black_knight_amount * KNIGHT_MULTIPLIER;
+        score -= black_rook_amount * ROOK_MULTIPLIER;
+        score -= black_queen_amount * QUEEN_MULTIPLIER;
+        score -= black_king_amount * KING_MULTIPLIER;
+
         score
     }
 }
