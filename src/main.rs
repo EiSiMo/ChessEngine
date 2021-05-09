@@ -1,27 +1,43 @@
 use std::time::SystemTime;
+use std::env;
 
-mod types;
-mod enums;
-mod helpers;
+use crate::board::Board;
+
+mod board;
+mod board_evaluation;
+mod board_representation;
+mod board_helpers;
+mod move_searching;
+mod board_init;
+mod move_generation;
+
+
 
 
 fn main() {
-    let start_time = SystemTime::now();
-
-    let mut b = types::board::Board::default();
-    let depth = 8_u8;
-    let amount = 20_u8;
-    for _ in 0..amount {
-        b = b.minimax(depth, i32::MIN, i32::MAX).0;
+    /*
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        println!("Invalid commandline arguments");
+    } else {
+        let fen = args[1].as_str();
+        let mut b = Board::from_fen(fen);
+        b = b.minimax(6_u8, i32::MIN, i32::MAX).0;
         println!("{}", b.as_fen());
     }
+    */
 
+
+    let mut b = Board::default();
+    let start_time = SystemTime::now();
+    for _ in 0..20 {
+        b = b.minimax(4_u8, i32::MIN, i32::MAX).0
+    }
     match start_time.elapsed() {
         Ok(elapsed) => {
-            println!("Generating {} moves with depth {} took {} ms", amount, depth, elapsed.as_millis());
+            println!("Finding the best move took {} ms", elapsed.as_millis());
         }
         Err(e) => {
-            // an error occurred!
             println!("Error: {:?}", e);
         }
     }
