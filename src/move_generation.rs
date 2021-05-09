@@ -1,5 +1,71 @@
 use crate::board::Board;
 
+static KNIGHT_MOVE_TABLE: [Vec<u64>; 64] = [
+    vec!(9007199254740992, 70368744177664),
+    vec!(4503599627370496, 35184372088832),
+    vec!(36028797018963968, 2251799813685248, 70368744177664, 17592186044416),
+    vec!(18014398509481984, 1125899906842624, 35184372088832, 8796093022208),
+    vec!(9007199254740992, 562949953421312, 17592186044416, 4398046511104),
+    vec!(4503599627370496, 281474976710656, 8796093022208, 2199023255552),
+    vec!(2251799813685248, 4398046511104, 1099511627776),
+    vec!(1125899906842624, 2199023255552),
+    vec!(2305843009213693952, 35184372088832, 274877906944),
+    vec!(1152921504606846976, 17592186044416, 137438953472),
+    vec!(9223372036854775808, 576460752303423488, 140737488355328, 8796093022208, 274877906944, 68719476736),
+    vec!(4611686018427387904, 288230376151711744, 70368744177664, 4398046511104, 137438953472, 34359738368),
+    vec!(2305843009213693952, 144115188075855872, 35184372088832, 2199023255552, 68719476736, 17179869184),
+    vec!(1152921504606846976, 72057594037927936, 17592186044416, 1099511627776, 34359738368, 8589934592),
+    vec!(576460752303423488, 8796093022208, 17179869184, 4294967296),
+    vec!(288230376151711744, 4398046511104, 8589934592),
+    vec!(4611686018427387904, 9007199254740992, 137438953472, 1073741824),
+    vec!(9223372036854775808, 2305843009213693952, 4503599627370496, 68719476736, 536870912),
+    vec!(4611686018427387904, 1152921504606846976, 36028797018963968, 2251799813685248, 549755813888, 34359738368, 1073741824, 268435456),
+    vec!(2305843009213693952, 576460752303423488, 18014398509481984, 1125899906842624, 274877906944, 17179869184, 536870912, 134217728),
+    vec!(1152921504606846976, 288230376151711744, 9007199254740992, 562949953421312, 137438953472, 8589934592, 268435456, 67108864),
+    vec!(576460752303423488, 144115188075855872, 4503599627370496, 281474976710656, 68719476736, 4294967296, 134217728, 33554432),
+    vec!(288230376151711744, 72057594037927936, 2251799813685248, 34359738368, 67108864, 16777216),
+    vec!(144115188075855872, 1125899906842624, 17179869184, 33554432),
+    vec!(18014398509481984, 35184372088832, 536870912, 4194304),
+    vec!(36028797018963968, 9007199254740992, 17592186044416, 268435456, 2097152),
+    vec!(18014398509481984, 4503599627370496, 140737488355328, 8796093022208, 2147483648, 134217728, 4194304, 1048576),
+    vec!(9007199254740992, 2251799813685248, 70368744177664, 4398046511104, 1073741824, 67108864, 2097152, 524288),
+    vec!(4503599627370496, 1125899906842624, 35184372088832, 2199023255552, 536870912, 33554432, 1048576, 262144),
+    vec!(2251799813685248, 562949953421312, 17592186044416, 1099511627776, 268435456, 16777216, 524288, 131072),
+    vec!(1125899906842624, 281474976710656, 8796093022208, 134217728, 262144, 65536),
+    vec!(562949953421312, 4398046511104, 67108864, 131072),
+    vec!(70368744177664, 137438953472, 2097152, 16384),
+    vec!(140737488355328, 35184372088832, 68719476736, 1048576, 8192),
+    vec!(70368744177664, 17592186044416, 549755813888, 34359738368, 8388608, 524288, 16384, 4096),
+    vec!(35184372088832, 8796093022208, 274877906944, 17179869184, 4194304, 262144, 8192, 2048),
+    vec!(17592186044416, 4398046511104, 137438953472, 8589934592, 2097152, 131072, 4096, 1024),
+    vec!(8796093022208, 2199023255552, 68719476736, 4294967296, 1048576, 65536, 2048, 512),
+    vec!(4398046511104, 1099511627776, 34359738368, 524288, 1024, 256),
+    vec!(2199023255552, 17179869184, 262144, 512),
+    vec!(274877906944, 536870912, 8192, 64),
+    vec!(549755813888, 137438953472, 268435456, 4096, 32),
+    vec!(274877906944, 68719476736, 2147483648, 134217728, 32768, 2048, 64, 16),
+    vec!(137438953472, 34359738368, 1073741824, 67108864, 16384, 1024, 32, 8),
+    vec!(68719476736, 17179869184, 536870912, 33554432, 8192, 512, 16, 4),
+    vec!(34359738368, 8589934592, 268435456, 16777216, 4096, 256, 8, 2),
+    vec!(17179869184, 4294967296, 134217728, 2048, 4, 1),
+    vec!(8589934592, 67108864, 1024, 2),
+    vec!(1073741824, 2097152, 32),
+    vec!(2147483648, 536870912, 1048576, 16),
+    vec!(1073741824, 268435456, 8388608, 524288, 128, 8, 0),
+    vec!(536870912, 134217728, 4194304, 262144, 64, 4, 0),
+    vec!(268435456, 67108864, 2097152, 131072, 32, 2, 0),
+    vec!(134217728, 33554432, 1048576, 65536, 16, 1, 0),
+    vec!(67108864, 16777216, 524288, 8, 0),
+    vec!(33554432, 262144, 4, 0),
+    vec!(4194304, 8192),
+    vec!(8388608, 2097152, 4096),
+    vec!(4194304, 1048576, 32768, 2048),
+    vec!(2097152, 524288, 16384, 1024),
+    vec!(1048576, 262144, 8192, 512),
+    vec!(524288, 131072, 4096, 256),
+    vec!(262144, 65536, 2048),
+    vec!(131072, 1024),
+];
 
 impl Board {
     pub fn generate_possible_moves(self) -> Vec<Board> {
@@ -7,6 +73,9 @@ impl Board {
         let figures = self.get_figures();
         let enemies = self.get_enemies();
         let allies = self.get_allies();
+
+        // TODO do this 'let knight = self.withe_knights & field;' all at the top of the function and
+        // then check this 'if knight != 0 {' with elif because there can only be one on the field
 
         if self.withe_king | self.black_king != 0 {
             if self.withes_turn {
@@ -327,172 +396,20 @@ impl Board {
                     {
                         let knight = self.withe_knights & field;
                         if knight != 0 {
-                            // TOP LEFT TOP JUMP
-                            // exclude knights in 1 left column or 2 top lines
-                            let tlt_mask = 0b1111111111111111100000001000000010000000100000001000000010000000_u64;
-                            let knight_mask = tlt_mask & knight;
-                            // exclude fields blocked by allies
-                            let knight_jump = knight << 17;
-                            let knight_blocked = allies & knight_jump;
-                            // if the move is valid
-                            if knight_mask == 0 && knight_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_knights ^= knight;
-                                // insert the new piece
-                                board_move.withe_knights |= knight_jump;
-                                // delete the enemy piece if existing
-                                board_move.delete_enemies(knight_jump);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
-
-                            // TOP RIGHT TOP JUMP
-                            // exclude knights in 1 right column or 2 top lines
-                            let trt_mask = 0b1111111111111111000000010000000100000001000000010000000100000001_u64;
-                            let knight_mask = trt_mask & knight;
-                            // exclude fields blocked by allies
-                            let knight_jump = knight << 15;
-                            let knight_blocked = allies & knight_jump;
-                            // if the move is valid
-                            if knight_mask == 0 && knight_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_knights ^= knight;
-                                // insert the new piece
-                                board_move.withe_knights |= knight_jump;
-                                // delete the enemy piece if existing
-                                board_move.delete_enemies(knight_jump);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
-
-                            // TOP LEFT BOT JUMP
-                            // exclude knights in 2 left columns or 1 top line
-                            let tlb_mask = 0b1111111111000000110000001100000011000000110000001100000011000000_u64;
-                            let knight_mask = tlb_mask & knight;
-                            // exclude fields blocked by allies
-                            let knight_jump = knight << 10;
-                            let knight_blocked = allies & knight_jump;
-                            // if the move is valid
-                            if knight_mask == 0 && knight_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_knights ^= knight;
-                                // insert the new piece
-                                board_move.withe_knights |= knight_jump;
-                                // delete the enemy piece if existing
-                                board_move.delete_enemies(knight_jump);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
-
-                            // TOP RIGHT BOT JUMP
-                            // exclude knights in 2 right columns or 1 top line
-                            let trb_mask = 0b1111111100000011000000110000001100000011000000110000001100000011_u64;
-                            let knight_mask = trb_mask & knight;
-                            // exclude fields blocked by allies
-                            let knight_jump = knight << 6;
-                            let knight_blocked = allies & knight_jump;
-                            // if the move is valid
-                            if knight_mask == 0 && knight_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_knights ^= knight;
-                                // insert the new piece
-                                board_move.withe_knights |= knight_jump;
-                                // delete the enemy piece if existing
-                                board_move.delete_enemies(knight_jump);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
-
-                            // BOT LEFT TOP JUMP
-                            // exclude knights in 2 left columns or 1 bot line
-                            let blt_mask = 0b1100000011000000110000001100000011000000110000001100000011111111_u64;
-                            let knight_mask = blt_mask & knight;
-                            // exclude fields blocked by allies
-                            let knight_jump = knight >> 6;
-                            let knight_blocked = allies & knight_jump;
-                            // if the move is valid
-                            if knight_mask == 0 && knight_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_knights ^= knight;
-                                // insert the new piece
-                                board_move.withe_knights |= knight_jump;
-                                // delete the enemy piece if existing
-                                board_move.delete_enemies(knight_jump);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
-
-                            // BOT RIGHT TOP JUMP
-                            // exclude knights in 2 right columns or 1 bot line
-                            let brt_mask = 0b0000001100000011000000110000001100000011000000110000001111111111_u64;
-                            let knight_mask = brt_mask & knight;
-                            // exclude fields blocked by allies
-                            let knight_jump = knight >> 10;
-                            let knight_blocked = allies & knight_jump;
-                            // if the move is valid
-                            if knight_mask == 0 && knight_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_knights ^= knight;
-                                // insert the new piece
-                                board_move.withe_knights |= knight_jump;
-                                // delete the enemy piece if existing
-                                board_move.delete_enemies(knight_jump);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
-
-                            // BOT LEFT BOT JUMP
-                            // exclude knights in 1 left column or 2 bot lines
-                            let blb_mask = 0b1000000010000000100000001000000010000000100000001111111111111111_u64;
-                            let knight_mask = blb_mask & knight;
-                            // exclude fields blocked by allies
-                            let knight_jump = knight >> 15;
-                            let knight_blocked = allies & knight_jump;
-                            // if the move is valid
-                            if knight_mask == 0 && knight_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_knights ^= knight;
-                                // insert the new piece
-                                board_move.withe_knights |= knight_jump;
-                                // delete the enemy piece if existing
-                                board_move.delete_enemies(knight_jump);
-                                board_move.next();
-                                moves.push(board_move);
-                            }
-
-                            // BOT RIGHT BOT JUMP
-                            // exclude knights in 1 right column or 2 bot lines
-                            let brb_mask = 0b0000000100000001000000010000000100000001000000011111111111111111_u64;
-                            let knight_mask = brb_mask & knight;
-                            // exclude fields blocked by allies
-                            let knight_jump = knight >> 17;
-                            let knight_blocked = allies & knight_jump;
-                            // if the move is valid
-                            if knight_mask == 0 && knight_blocked == 0 {
-                                // create a copy of the current board
-                                let mut board_move = self.clone();
-                                // delete the old piece
-                                board_move.withe_knights ^= knight;
-                                // insert the new piece
-                                board_move.withe_knights |= knight_jump;
-                                // delete the enemy piece if existing
-                                board_move.delete_enemies(knight_jump);
-                                board_move.next();
-                                moves.push(board_move);
+                            for square_jump in KNIGHT_MOVE_TABLE[field_index as usize] {
+                                let knight_blocked = allies & square_jump;
+                                if knight_blocked == 0 {
+                                    // create a copy of the current board
+                                    let mut board_move = self.clone();
+                                    // delete the old piece
+                                    board_move.withe_knights ^= knight;
+                                    // insert the new piece
+                                    board_move.withe_knights |= square_jump;
+                                    // delete the enemy piece if existing
+                                    board_move.delete_enemies(square_jump);
+                                    board_move.next();
+                                    moves.push(board_move);
+                                }
                             }
                         }
                     }

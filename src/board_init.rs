@@ -53,7 +53,7 @@ impl Board {
             match character {
                 '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' => {
                     let shift: u32 = character.to_digit(10).unwrap();
-                    mask >>= (shift - 1);
+                    mask >>= shift - 1;
                 }
                 'P' => board.withe_pawns |= mask,
                 'B' => board.withe_bishops |= mask,

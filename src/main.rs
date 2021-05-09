@@ -27,7 +27,7 @@ fn main() {
     }
     */
 
-
+    /*
     let mut b = Board::default();
     let start_time = SystemTime::now();
     for _ in 0..20 {
@@ -41,4 +41,12 @@ fn main() {
             println!("Error: {:?}", e);
         }
     }
+    */
+
+    let mut b = Board::from_fen("8/8/8/3N4/8/8/8/8 w - - 0 1");
+    let moves = b.generate_possible_moves();
+    for m in moves.iter() {
+        println!("{}\n", m);
+    }
+
 }
