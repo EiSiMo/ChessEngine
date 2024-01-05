@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate phf;
+
 mod evaluation;
 mod move_search;
 mod uci_interface;
@@ -55,6 +58,6 @@ fn main() {
         author: String::from("Moritz"),
         position: Board::default()
     };
-    //benchmark_engine(&mut erbsenhirn);
+    benchmark_engine(&mut erbsenhirn);
     erbsenhirn.uci_loop();
 }

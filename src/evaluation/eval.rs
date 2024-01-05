@@ -1,3 +1,5 @@
+use lazy_static;
+
 use crate::Engine;
 use crate::evaluation::consts;
 
@@ -7,6 +9,7 @@ impl Engine {
         let mut score: i32 = 0;
         let w_figures = board.color_combined(chess::Color::White).0;
         let b_figures = board.color_combined(chess::Color::Black).0;
+        let figures = w_figures & b_figures;
 
 
         let w_pawns = board.pieces(chess::Piece::Pawn).0 & w_figures;
@@ -79,43 +82,65 @@ impl Engine {
         score -= ((b_rooks & consts::B_ROOK_500).count_ones() * 500) as i32;
         score += ((w_queens & consts::W_QUEEN_900).count_ones() * 900) as i32;
         score -= ((b_queens & consts::B_QUEEN_900).count_ones() * 900) as i32;
-        score += ((w_king & consts::W_KING_MID_19970).count_ones() * 19970) as i32;
-        score += ((w_king & consts::W_KING_MID_19960).count_ones() * 19960) as i32;
-        score += ((w_king & consts::W_KING_MID_19950).count_ones() * 19950) as i32;
-        score += ((w_king & consts::W_KING_MID_19980).count_ones() * 19980) as i32;
-        score += ((w_king & consts::W_KING_MID_19990).count_ones() * 19990) as i32;
-        score += ((w_king & consts::W_KING_MID_20020).count_ones() * 20020) as i32;
-        score += ((w_king & consts::W_KING_MID_20000).count_ones() * 20000) as i32;
-        score += ((w_king & consts::W_KING_MID_20030).count_ones() * 20030) as i32;
-        score += ((w_king & consts::W_KING_MID_20010).count_ones() * 20010) as i32;
-        score -= ((b_king & consts::B_KING_MID_20020).count_ones() * 20020) as i32;
-        score -= ((b_king & consts::B_KING_MID_20030).count_ones() * 20030) as i32;
-        score -= ((b_king & consts::B_KING_MID_20010).count_ones() * 20010) as i32;
-        score -= ((b_king & consts::B_KING_MID_20000).count_ones() * 20000) as i32;
-        score -= ((b_king & consts::B_KING_MID_19990).count_ones() * 19990) as i32;
-        score -= ((b_king & consts::B_KING_MID_19980).count_ones() * 19980) as i32;
-        score -= ((b_king & consts::B_KING_MID_19970).count_ones() * 19970) as i32;
-        score -= ((b_king & consts::B_KING_MID_19960).count_ones() * 19960) as i32;
-        score -= ((b_king & consts::B_KING_MID_19950).count_ones() * 19950) as i32;
-        score += ((w_king & consts::W_KING_END_19950).count_ones() * 19950) as i32;
-        score += ((w_king & consts::W_KING_END_19960).count_ones() * 19960) as i32;
-        score += ((w_king & consts::W_KING_END_19970).count_ones() * 19970) as i32;
-        score += ((w_king & consts::W_KING_END_19980).count_ones() * 19980) as i32;
-        score += ((w_king & consts::W_KING_END_19990).count_ones() * 19990) as i32;
-        score += ((w_king & consts::W_KING_END_20000).count_ones() * 20000) as i32;
-        score += ((w_king & consts::W_KING_END_20020).count_ones() * 20020) as i32;
-        score += ((w_king & consts::W_KING_END_20030).count_ones() * 20030) as i32;
-        score += ((w_king & consts::W_KING_END_20040).count_ones() * 20040) as i32;
-        score -= ((b_king & consts::B_KING_END_19950).count_ones() * 19950) as i32;
-        score -= ((b_king & consts::B_KING_END_19970).count_ones() * 19970) as i32;
-        score -= ((b_king & consts::B_KING_END_20000).count_ones() * 20000) as i32;
-        score -= ((b_king & consts::B_KING_END_19990).count_ones() * 19990) as i32;
-        score -= ((b_king & consts::B_KING_END_20020).count_ones() * 20020) as i32;
-        score -= ((b_king & consts::B_KING_END_20030).count_ones() * 20030) as i32;
-        score -= ((b_king & consts::B_KING_END_20040).count_ones() * 20040) as i32;
-        score -= ((b_king & consts::B_KING_END_19980).count_ones() * 19980) as i32;
-        score -= ((b_king & consts::B_KING_END_19960).count_ones() * 19960) as i32;
+        if figures.count_ones() > 7 {
+            score += ((w_king & consts::W_KING_MID_19970).count_ones() * 19970) as i32;
+            score += ((w_king & consts::W_KING_MID_19960).count_ones() * 19960) as i32;
+            score += ((w_king & consts::W_KING_MID_19950).count_ones() * 19950) as i32;
+            score += ((w_king & consts::W_KING_MID_19980).count_ones() * 19980) as i32;
+            score += ((w_king & consts::W_KING_MID_19990).count_ones() * 19990) as i32;
+            score += ((w_king & consts::W_KING_MID_20020).count_ones() * 20020) as i32;
+            score += ((w_king & consts::W_KING_MID_20000).count_ones() * 20000) as i32;
+            score += ((w_king & consts::W_KING_MID_20030).count_ones() * 20030) as i32;
+            score += ((w_king & consts::W_KING_MID_20010).count_ones() * 20010) as i32;
+            score -= ((b_king & consts::B_KING_MID_20020).count_ones() * 20020) as i32;
+            score -= ((b_king & consts::B_KING_MID_20030).count_ones() * 20030) as i32;
+            score -= ((b_king & consts::B_KING_MID_20010).count_ones() * 20010) as i32;
+            score -= ((b_king & consts::B_KING_MID_20000).count_ones() * 20000) as i32;
+            score -= ((b_king & consts::B_KING_MID_19990).count_ones() * 19990) as i32;
+            score -= ((b_king & consts::B_KING_MID_19980).count_ones() * 19980) as i32;
+            score -= ((b_king & consts::B_KING_MID_19970).count_ones() * 19970) as i32;
+            score -= ((b_king & consts::B_KING_MID_19960).count_ones() * 19960) as i32;
+            score -= ((b_king & consts::B_KING_MID_19950).count_ones() * 19950) as i32;
+        } else {
+            score += ((w_king & consts::W_KING_END_19950).count_ones() * 19950) as i32;
+            score += ((w_king & consts::W_KING_END_19960).count_ones() * 19960) as i32;
+            score += ((w_king & consts::W_KING_END_19970).count_ones() * 19970) as i32;
+            score += ((w_king & consts::W_KING_END_19980).count_ones() * 19980) as i32;
+            score += ((w_king & consts::W_KING_END_19990).count_ones() * 19990) as i32;
+            score += ((w_king & consts::W_KING_END_20000).count_ones() * 20000) as i32;
+            score += ((w_king & consts::W_KING_END_20020).count_ones() * 20020) as i32;
+            score += ((w_king & consts::W_KING_END_20030).count_ones() * 20030) as i32;
+            score += ((w_king & consts::W_KING_END_20040).count_ones() * 20040) as i32;
+            score -= ((b_king & consts::B_KING_END_19950).count_ones() * 19950) as i32;
+            score -= ((b_king & consts::B_KING_END_19970).count_ones() * 19970) as i32;
+            score -= ((b_king & consts::B_KING_END_20000).count_ones() * 20000) as i32;
+            score -= ((b_king & consts::B_KING_END_19990).count_ones() * 19990) as i32;
+            score -= ((b_king & consts::B_KING_END_20020).count_ones() * 20020) as i32;
+            score -= ((b_king & consts::B_KING_END_20030).count_ones() * 20030) as i32;
+            score -= ((b_king & consts::B_KING_END_20040).count_ones() * 20040) as i32;
+            score -= ((b_king & consts::B_KING_END_19980).count_ones() * 19980) as i32;
+            score -= ((b_king & consts::B_KING_END_19960).count_ones() * 19960) as i32;
+        }
 
+        match consts::ROOK_COVER_LOOKUP.get(&w_rooks) {
+            Some(value) => {
+                // if no pieces between the rooks
+                score += (value & figures == 0) as i32 * consts::ROOK_COVER_BONUS
+            },
+            None => {
+                // No rooks on one line
+            },
+        }
+
+        match consts::ROOK_COVER_LOOKUP.get(&b_rooks) {
+            Some(value) => {
+                // if no pieces between the rooks
+                score -= (value & figures == 0) as i32 * consts::ROOK_COVER_BONUS
+            },
+            None => {
+                // No rooks on one line
+            },
+        }
         score
     }
 }
