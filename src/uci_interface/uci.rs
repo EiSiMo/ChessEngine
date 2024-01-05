@@ -1,13 +1,13 @@
 use std::fs::OpenOptions;
 use std::io::{self, Write};
-use chess::{MoveGen, Board};
+use chess::{Board};
 
-use crate::evaluation;
+
 use crate::Engine;
 
 impl Engine {
     pub fn uci_loop(&mut self) {
-        loop {
+        while !self.quit {
             let mut input = String::new();
             std::io::stdin().read_line(&mut input).unwrap();
             self.receive(input.trim());
@@ -61,7 +61,7 @@ impl Engine {
         assert!(true);
     }
 
-    fn handle_go(&mut self, arg: &[&str]) {
+    fn handle_go(&mut self, _arg: &[&str]) {
         let depth = 4;
         let (may_best_move, _) = self.minmax(self.position, depth);
         match may_best_move {
@@ -74,13 +74,13 @@ impl Engine {
         }
     }
 
-    fn handle_uci(&self, arg: &[&str]) {
+    fn handle_uci(&self, _arg: &[&str]) {
         self.send(&format!("id name {}", self.name));
         self.send(&format!("id author {}", self.author));
         self.send("uciok");
     }
-    fn handle_quit(&self) {
-        assert!(true);
+    fn handle_quit(&mut self) {
+        self.quit = true;
     }
 
     fn handle_stop(&self) {
@@ -92,7 +92,7 @@ impl Engine {
     }
 
     // To handle commands that are not implemented by default in trait
-    fn handle_unknown(&self, command: &str, arg: &[&str]){
+    fn handle_unknown(&self, _command: &str, _arg: &[&str]){
         assert!(true);
     }
 

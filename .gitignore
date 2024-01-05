@@ -3,4 +3,5 @@
 /src/replace.py
 /scripts
 /Cargo.lock
+/src/benchmark/stockfish
 uci_log.txt
