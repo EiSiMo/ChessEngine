@@ -1,14 +1,14 @@
 use crate::Engine;
 
 impl Engine {
-    pub fn minmax(&mut self, position: chess::Board, depth: u8) -> (Option<chess::ChessMove>, i32) {
+    pub fn alphabeta(&mut self, position: chess::Board, depth: u8, alpha, beta) -> (Option<chess::ChessMove>, i32) {
         let whites_turn = position.side_to_move() == chess::Color::White;
 
         if depth == 0 || position.status() != chess::BoardStatus::Ongoing {
             return (None, self.evaluate(position))
         }
 
-        let mut move_gen = chess::MoveGen::new_legal(&position);
+        let move_gen = chess::MoveGen::new_legal(&position);
 
         let mut current_best_move: Option<chess::ChessMove> = None;
 

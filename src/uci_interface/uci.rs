@@ -50,7 +50,12 @@ impl Engine {
             self.position = board;
         }
         // FEN try if matches ^(?:(?:[PNBRQK]+|[1-8])\/){7}(?:[PNBRQK]+|[1-8])$
-        else if true {
+        else if arg[0] == "fen" {
+            let board_option = Board::from_fen(arg[1..].join(" ").to_string());
+            match board_option {
+                Some(board) => {self.position = board;},
+                None    => self.send("cannot convert fen to board"),
+            }
         }
         // handle invalid input
         else {
