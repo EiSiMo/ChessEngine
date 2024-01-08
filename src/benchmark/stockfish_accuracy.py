@@ -25,7 +25,6 @@ class Benchmarker:
             data = file.read()
             lines = data.split("\n")
 
-        lines = lines[:1000]
         self.total_moves = len(lines)
         for line in lines:
             board_fen = line.split(" | ")[1]

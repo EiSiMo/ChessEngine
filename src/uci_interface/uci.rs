@@ -68,7 +68,7 @@ impl Engine {
 
     fn handle_go(&mut self, _arg: &[&str]) {
         let depth = 4;
-        let (may_best_move, _) = self.minmax(self.position, depth);
+        let (may_best_move, _) = self.minmax(self.position, depth, i32::MIN, i32::MAX);
         match may_best_move {
             None => {
                 println!("no move found");
