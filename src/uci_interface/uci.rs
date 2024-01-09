@@ -9,7 +9,7 @@ impl Engine {
     pub fn uci_loop(&mut self) {
         while !self.quit {
             let mut input = String::new();
-            std::io::stdin().read_line(&mut input).unwrap();
+            io::stdin().read_line(&mut input).unwrap();
             self.receive(input.trim());
         }
     }
@@ -67,8 +67,8 @@ impl Engine {
     }
 
     fn handle_go(&mut self, _arg: &[&str]) {
-        let depth = 4;
-        let (may_best_move, _) = self.minmax(self.position, depth, i32::MIN, i32::MAX);
+        let depth = 6;
+        let (may_best_move, _) = self.alphabeta(self.position, depth, i32::MIN, i32::MAX);
         match may_best_move {
             None => {
                 println!("no move found");

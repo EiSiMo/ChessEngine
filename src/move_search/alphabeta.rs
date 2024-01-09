@@ -19,7 +19,7 @@ impl Engine {
                 current_best_score = i32::MIN;
                 let mut new_position = position.clone();
                 position.make_move(new_move, &mut new_position);
-                let (_, new_score) = self.minmax(new_position, depth-1);
+                let (_, new_score) = self.alphabeta(new_position, depth-1, alpha, beta);
                 if new_score > current_best_score {
                     current_best_score = new_score;
                     current_best_move = Some(new_move);
@@ -37,7 +37,7 @@ impl Engine {
             for new_move in move_gen {
                 let mut new_position = position.clone();
                 position.make_move(new_move, &mut new_position);
-                let (_, new_score) = self.minmax(new_position, depth-1);
+                let (_, new_score) = self.alphabeta(new_position, depth-1, alpha, beta);
 
                 if new_score < current_best_score {
                     current_best_score = new_score;
