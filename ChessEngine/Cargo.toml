@@ -1,7 +1,0 @@
-[package]
-name = "chess_engine"
-version = "0.2.0"
-authors = ["Moritz Eigenauer <moritz.eigenauer@gmail.com>"]
-edition = "2024"
-
-[dependencies]
