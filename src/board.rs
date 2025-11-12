@@ -313,16 +313,24 @@ impl Board {
         println!("============================================\n");
     }
     
-    pub fn make_move(&mut self, mv: Move) {
+    pub fn make_move(&mut self, mv: Move) -> UndoMove {
         let from = mv.value()& MOVE_FROM_MASK;
         let to = mv.value() & MOVE_TO_MASK;
         let flag = mv.value() & MOVE_FLAG_MASK;
         
-        // promo must come first because of double usage of the flag bits
+        //// TODO keep going here actually make the move on the board <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         if flag & MOVE_FLAG_CAPTURE > 0 {
-            
+            return UndoMove::new(mv,
+                Some(PieceType::Pawn), // PLACEHOLDER!!!!!!!!!!!!!!!!!!!!
+                self.en_passant_target,
+                self.castling_rights,
+                self.halfmove_clock);
         } else { // No capture
-            
+            return UndoMove::new(mv,
+                None,
+                self.en_passant_target,
+                self.castling_rights,
+                self.halfmove_clock);
         }
     }
 }
