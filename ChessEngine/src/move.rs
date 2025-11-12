@@ -1,7 +1,10 @@
 use std::slice;
 use std::fmt;
 use crate::square::Square;
+<<<<<<< HEAD
 use crate::board::PieceType;
+=======
+>>>>>>> origin/master
 
 // BIT 0 - 5: FROM SQUARE (0-63)
 pub const MOVE_FROM_MASK: u16 = 0b0000_0000_0011_1111;
@@ -10,33 +13,48 @@ pub const MOVE_FROM_MASK: u16 = 0b0000_0000_0011_1111;
 pub const MOVE_TO_MASK: u16 = 0b0000_1111_1100_0000;
 
 // BIT 12 - 15: FLAGS (4 bits)
+<<<<<<< HEAD
+// 1. 0 no capture, 1 capture
 pub const MOVE_FLAG_MASK: u16 = 0b1111_0000_0000_0000;
 
 pub const MOVE_FLAG_QUIET: u16 = 0b0000_0000_0000_0000;
 pub const MOVE_FLAG_CAPTURE: u16 = 0b0001_0000_0000_0000;
-pub const MOVE_FLAG_EN_PASSANT: u16 = 0b0011_0000_0000_0000;
+pub const MOVE_FLAG_EN_PASSANT: u16 = 0b0010_0000_0000_0000;
 
-// Castle flags
-pub const MOVE_MASK_CASTLE: u16 = 0b1100_0000_0000_0000;
-pub const MOVE_FLAG_CASTLE_TRUE: u16 = 0b0100_0000_0000_0000;
-
-pub const MOVE_FLAG_WK_CASTLE: u16 = 0b0100_0000_0000_0000;
-pub const MOVE_FLAG_WQ_CASTLE: u16 = 0b0101_0000_0000_0000;
-pub const MOVE_FLAG_BK_CASTLE: u16 = 0b0110_0000_0000_0000;
-pub const MOVE_FLAG_BQ_CASTLE: u16 = 0b0111_0000_0000_0000;
+pub const MOVE_FLAG_WK_CASTLE: u16 = 0b0011_0000_0000_0000;
+pub const MOVE_FLAG_WQ_CASTLE: u16 = 0b0100_0000_0000_0000;
+pub const MOVE_FLAG_BK_CASTLE: u16 = 0b0101_0000_0000_0000;
+pub const MOVE_FLAG_BQ_CASTLE: u16 = 0b0110_0000_0000_0000;
+// 0111 is free
 
 // Promotion flags (use the 1xxx bits)
 // We combine capture flag with promotion type
 pub const MOVE_FLAG_PROMO: u16 = 0b1000_0000_0000_0000;
+pub const MOVE_FLAG_NO_PROMO: u16 = 0b0000_0000_0000_0000;
 
+=======
+pub const MOVE_FLAG_MASK: u16 = 0b1111_0000_0000_0000;
+
+pub const MOVE_FLAG_QUIET: u16 = 0b0000_0000_0000_0000;
+pub const MOVE_FLAG_DOUBLE_PAWN: u16 = 0b0001_0000_0000_0000;
+pub const MOVE_FLAG_KING_CASTLE: u16 = 0b0010_0000_0000_0000;
+pub const MOVE_FLAG_QUEEN_CASTLE: u16 = 0b0011_0000_0000_0000;
+pub const MOVE_FLAG_CAPTURE: u16 = 0b0100_0000_0000_0000;
+pub const MOVE_FLAG_EN_PASSANT: u16 = 0b0101_0000_0000_0000;
+// 0110, 0111 are free
+
+// Promotion flags (use the 1xxx bits)
+// We combine capture flag with promotion type
+>>>>>>> origin/master
 pub const MOVE_FLAG_PROMO_N: u16 = 0b1000_0000_0000_0000;
-pub const MOVE_FLAG_PROMO_B: u16 = 0b1010_0000_0000_0000;
-pub const MOVE_FLAG_PROMO_R: u16 = 0b1100_0000_0000_0000;
-pub const MOVE_FLAG_PROMO_Q: u16 = 0b1110_0000_0000_0000;
-pub const MOVE_FLAG_PROMO_N_CAP: u16 = 0b1001_0000_0000_0000;
-pub const MOVE_FLAG_PROMO_B_CAP: u16 = 0b1011_0000_0000_0000;
-pub const MOVE_FLAG_PROMO_R_CAP: u16 = 0b1101_0000_0000_0000;
-pub const MOVE_FLAG_PROMO_Q_CAP: u16 = 0b1111_0000_0000_0000;
+pub const MOVE_FLAG_PROMO_B: u16 = 0b1001_0000_0000_0000;
+pub const MOVE_FLAG_PROMO_R: u16 = 0b1010_0000_0000_0000;
+pub const MOVE_FLAG_PROMO_Q: u16 = 0b1011_0000_0000_0000;
+pub const MOVE_FLAG_PROMO_CAP_N: u16 = 0b1100_0000_0000_0000;
+pub const MOVE_FLAG_PROMO_CAP_B: u16 = 0b1101_0000_0000_0000;
+pub const MOVE_FLAG_PROMO_CAP_R: u16 = 0b1110_0000_0000_0000;
+pub const MOVE_FLAG_PROMO_CAP_Q: u16 = 0b1111_0000_0000_0000;
+
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Move(u16);
@@ -48,15 +66,36 @@ impl Move {
             from as u16)
     }
     
+<<<<<<< HEAD
     pub fn value(&self) -> u16 {
         self.0
     }
     
+=======
+>>>>>>> origin/master
     #[inline(always)]
     pub fn get_flags(&self) -> u16 {
         self.0 & MOVE_FLAG_MASK
     }
 
+<<<<<<< HEAD
+=======
+    // Helper for search
+    #[inline(always)]
+    pub fn is_capture(&self) -> bool {
+        // Check if the 3rd bit of the flag (0100) is set.
+        // This covers simple captures (0100), EP (0101), and promo-captures (11xx).
+        (self.0 & 0b0100_0000_0000_0000) != 0
+    }
+    
+    // Helper for search
+    #[inline(always)]
+    pub fn is_promotion(&self) -> bool {
+        // Check if the 4th bit of the flag (1xxx) is set.
+        (self.0 & 0b1000_0000_0000_0000) != 0
+    }
+
+>>>>>>> origin/master
 
     /// Converts a square index (0-63) to algebraic notation (e.g., 0 -> "a1", 63 -> "h8").
     fn square_val_to_alg(val: u16) -> String {
@@ -72,10 +111,17 @@ impl Move {
         // Handle castling first. In this new format, the "to" square is
         // the *king's* destination square (g1/c1 or g8/c8).
         // Your old implementation reading the file is still fine.
+<<<<<<< HEAD
         if (flags == MOVE_FLAG_WK_CASTLE) || (flags == MOVE_FLAG_BK_CASTLE) {
             return "O-O".to_string();
         }
         if (flags == MOVE_FLAG_WQ_CASTLE) || (flags == MOVE_FLAG_BQ_CASTLE) {
+=======
+        if flags == MOVE_FLAG_KING_CASTLE {
+            return "O-O".to_string();
+        }
+        if flags == MOVE_FLAG_QUEEN_CASTLE {
+>>>>>>> origin/master
             return "O-O-O".to_string();
         }
 
@@ -88,10 +134,10 @@ impl Move {
         // Check if it's any promotion type (1xxx)
         if (flags & 0b1000_0000_0000_0000) != 0 {
             let promo_char = match flags {
-                MOVE_FLAG_PROMO_N | MOVE_FLAG_PROMO_N_CAP => 'n',
-                MOVE_FLAG_PROMO_B | MOVE_FLAG_PROMO_B_CAP => 'b',
-                MOVE_FLAG_PROMO_R | MOVE_FLAG_PROMO_R_CAP => 'r',
-                MOVE_FLAG_PROMO_Q | MOVE_FLAG_PROMO_Q_CAP => 'q',
+                MOVE_FLAG_PROMO_N | MOVE_FLAG_PROMO_CAP_N => 'n',
+                MOVE_FLAG_PROMO_B | MOVE_FLAG_PROMO_CAP_B => 'b',
+                MOVE_FLAG_PROMO_R | MOVE_FLAG_PROMO_CAP_R => 'r',
+                MOVE_FLAG_PROMO_Q | MOVE_FLAG_PROMO_CAP_Q => 'q',
                 _ => '?', // Should not happen
             };
             format!("{}{}{}", from_str, to_str, promo_char)
@@ -146,6 +192,7 @@ impl fmt::Display for MoveList {
         write!(f, "{}", &self.iter().map(|mv| mv.to_algebraic()).collect::<Vec<String>>().join(" "))
     }
 }
+<<<<<<< HEAD
 
 
 pub struct UndoMove {
@@ -172,3 +219,5 @@ impl UndoMove {
             
         }
 }
+=======
+>>>>>>> origin/master

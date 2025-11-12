@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 use crate::board::*;
 use crate::r#move::*;
 use crate::square::*;
+=======
+use crate::board::Board;
+use crate::r#move::*;
+use crate::square::*;
+use crate::color::Color;
+>>>>>>> origin/master
 
 pub const RANK1_MASK: u64 = 255; // A1 - H1
 pub const RANK2_MASK: u64 = 65280; // A2 - H2
@@ -30,8 +37,13 @@ pub const PAWN_H_SIDE_CAPTURE_PROMOTION_MASK_BLACK: u64 = 32512; // A2 - G2
 pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
 
     // 1. Withe
+<<<<<<< HEAD
     if board.side_to_move == Color::White {
         let friendly_pawns = board.pieces[PieceType::Pawn as usize][0];
+=======
+    if board.color == Color::White {
+        let friendly_pawns = board.pawns[0];
+>>>>>>> origin/master
         let opponent_occupied = board.occupied[1];
 
         // 1.1 Single Push
@@ -52,7 +64,11 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         while double_push_targets > 0 {
             let to = SQUARES[double_push_targets.trailing_zeros() as usize];
             let from = to - 16;
+<<<<<<< HEAD
             list.push(Move::new(from, to, MOVE_FLAG_QUIET));
+=======
+            list.push(Move::new(from, to, MOVE_FLAG_DOUBLE_PAWN));
+>>>>>>> origin/master
             double_push_targets &= double_push_targets - 1;
         }
 
@@ -98,10 +114,10 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         while promotion_targets_a_side_capture > 0 {
             let to = SQUARES[promotion_targets_a_side_capture.trailing_zeros() as usize];
             let from = to - 7;
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_N_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_B_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_R_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_Q_CAP));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_Q));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_R));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_B));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_N));
             promotion_targets_a_side_capture &= promotion_targets_a_side_capture - 1;
         }
 
@@ -111,10 +127,10 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         while promotion_targets_h_side_capture > 0 {
             let to = SQUARES[promotion_targets_h_side_capture.trailing_zeros() as usize];
             let from = to - 9;
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_N_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_B_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_R_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_Q_CAP));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_Q));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_R));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_B));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_N));
             promotion_targets_h_side_capture &= promotion_targets_h_side_capture - 1;
         }
 
@@ -141,7 +157,11 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         }
     // 2. Black
     } else {
+<<<<<<< HEAD
         let friendly_pawns = board.pieces[PieceType::Pawn as usize][1];
+=======
+        let friendly_pawns = board.pawns[1];
+>>>>>>> origin/master
         let opponent_occupied = board.occupied[0];
 
         // 2.1 Single Push
@@ -162,7 +182,11 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         while double_push_targets > 0 {
             let to = SQUARES[double_push_targets.trailing_zeros() as usize];
             let from = to + 16;
+<<<<<<< HEAD
             list.push(Move::new(from, to, MOVE_FLAG_QUIET));
+=======
+            list.push(Move::new(from, to, MOVE_FLAG_DOUBLE_PAWN));
+>>>>>>> origin/master
             double_push_targets &= double_push_targets - 1;
         }
 
@@ -207,10 +231,10 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         while promotion_targets_a_side_capture > 0 {
             let to = SQUARES[promotion_targets_a_side_capture.trailing_zeros() as usize];
             let from = to + 9;
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_N_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_B_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_R_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_Q_CAP));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_Q));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_R));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_B));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_N));
             promotion_targets_a_side_capture &= promotion_targets_a_side_capture - 1;
         }
 
@@ -219,10 +243,10 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         while promotion_targets_h_side_capture > 0 {
             let to = SQUARES[promotion_targets_h_side_capture.trailing_zeros() as usize];
             let from = to + 7;
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_N_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_B_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_R_CAP));
-            list.push(Move::new(from, to, MOVE_FLAG_PROMO_Q_CAP));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_Q));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_R));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_B));
+            list.push(Move::new(from, to, MOVE_FLAG_PROMO_CAP_N));
             promotion_targets_h_side_capture &= promotion_targets_h_side_capture - 1;
         }
 

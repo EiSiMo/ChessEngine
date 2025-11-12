@@ -7,7 +7,11 @@ fn test_quiet_move_white_pawn() {
     // (from: E2, to: E4)
     // NOTE: This was MOVE_TYPE_FLAG_QUIET, but in the new system it's a specific flag.
     // The algebraic notation is the same, so we test with the new specific flag.
+<<<<<<< HEAD
     let m_quiet = Move::new(Square::E2, Square::E4, MOVE_FLAG_QUIET);
+=======
+    let m_quiet = Move::new(Square::E2, Square::E4, MOVE_FLAG_DOUBLE_PAWN);
+>>>>>>> origin/master
     assert_eq!(m_quiet.to_algebraic(), "e2e4");
 }
 
@@ -47,7 +51,7 @@ fn test_promotion_to_rook() {
 fn test_promotion_to_bishop() {
     // Test 6: Promotion to Bishop (Capture)
     // (from: G2, to: H1)
-    let m_promo_b = Move::new(Square::G2, Square::H1, MOVE_FLAG_PROMO_B_CAP);
+    let m_promo_b = Move::new(Square::G2, Square::H1, MOVE_FLAG_PROMO_CAP_B);
     assert_eq!(m_promo_b.to_algebraic(), "g2h1b");
 }
 
@@ -55,7 +59,7 @@ fn test_promotion_to_bishop() {
 fn test_promotion_to_knight() {
     // Test 7: Promotion to Knight (Capture)
     // (from: G7, to: F8)
-    let m_promo_n = Move::new(Square::G7, Square::F8, MOVE_FLAG_PROMO_N_CAP);
+    let m_promo_n = Move::new(Square::G7, Square::F8, MOVE_FLAG_PROMO_CAP_N);
     assert_eq!(m_promo_n.to_algebraic(), "g7f8n");
 }
 
@@ -63,7 +67,11 @@ fn test_promotion_to_knight() {
 fn test_white_kingside_castling() {
     // Test 8: White Kingside Castling
     // (from: E1, to: G1)
+<<<<<<< HEAD
     let m_castle_wk = Move::new(Square::E1, Square::G1, MOVE_FLAG_WK_CASTLE);
+=======
+    let m_castle_wk = Move::new(Square::E1, Square::G1, MOVE_FLAG_KING_CASTLE);
+>>>>>>> origin/master
     assert_eq!(m_castle_wk.to_algebraic(), "O-O");
 }
 
@@ -71,7 +79,11 @@ fn test_white_kingside_castling() {
 fn test_white_queenside_castling() {
     // Test 9: White Queenside Castling
     // (from: E1, to: C1)
+<<<<<<< HEAD
     let m_castle_wq = Move::new(Square::E1, Square::C1, MOVE_FLAG_WQ_CASTLE);
+=======
+    let m_castle_wq = Move::new(Square::E1, Square::C1, MOVE_FLAG_QUEEN_CASTLE);
+>>>>>>> origin/master
     assert_eq!(m_castle_wq.to_algebraic(), "O-O-O");
 }
 
@@ -79,7 +91,11 @@ fn test_white_queenside_castling() {
 fn test_black_kingside_castling() {
     // Test 10: Black Kingside Castling
     // (from: E8, to: G8)
+<<<<<<< HEAD
     let m_castle_bk = Move::new(Square::E8, Square::G8, MOVE_FLAG_BK_CASTLE);
+=======
+    let m_castle_bk = Move::new(Square::E8, Square::G8, MOVE_FLAG_KING_CASTLE);
+>>>>>>> origin/master
     assert_eq!(m_castle_bk.to_algebraic(), "O-O");
 }
 
@@ -87,6 +103,10 @@ fn test_black_kingside_castling() {
 fn test_black_queenside_castling() {
     // Test 11: Black Queenside Castling
     // (from: E8, to: C8)
+<<<<<<< HEAD
     let m_castle_bq = Move::new(Square::E8, Square::C8, MOVE_FLAG_BQ_CASTLE);
+=======
+    let m_castle_bq = Move::new(Square::E8, Square::C8, MOVE_FLAG_QUEEN_CASTLE);
+>>>>>>> origin/master
     assert_eq!(m_castle_bq.to_algebraic(), "O-O-O");
 }

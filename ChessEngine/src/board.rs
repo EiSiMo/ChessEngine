@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use crate::square::Square;
 use std::mem;
 use crate::r#move::*;
@@ -50,6 +51,35 @@ pub struct Board {
     
     pub pieces: [[u64; 2]; 6],
     
+=======
+use crate::color::Color;
+use crate::square::Square;
+use std::mem;
+
+pub const CASTLING_W_KING: u8 = 1;
+pub const CASTLING_W_KING_MASK: u64 = 96; // F1 G1
+
+pub const CASTLING_W_QUEEN: u8 = 2;
+pub const CASTLING_W_QUEEN_MASK: u64 = 14; // B1 C1 D1
+
+pub const CASTLING_B_KING: u8 = 4;
+pub const CASTLING_B_KING_MASK: u64 = 6917529027641081856; // F8 G8
+
+pub const CASTLING_B_QUEEN: u8 = 8;
+pub const CASTLING_B_QUEEN_MASK: u64 = 1008806316530991104; // B8 C8 D8
+
+pub struct Board {
+    pub color: Color,
+
+    pub pawns: [u64; 2],
+    pub knights: [u64; 2],
+    pub bishops: [u64; 2],
+    pub rooks: [u64; 2],
+    pub queens: [u64; 2],
+    pub kings: [u64; 2],
+
+    // Replaced 'withes' and 'blacks' with 'occupied' array
+>>>>>>> origin/master
     pub occupied: [u64; 2],
     pub all_occupied: u64,
     pub empty_squares: u64,
@@ -67,8 +97,19 @@ impl Board {
     pub fn from_fen(fen: &str) -> Self {
         let mut parts = fen.split_whitespace();
 
+<<<<<<< HEAD
         // Initialisiere das 2D-Array
         let mut pieces = [[0u64; 2]; 6];
+=======
+        let mut pawns = [0u64; 2];
+        let mut knights = [0u64; 2];
+        let mut bishops = [0u64; 2];
+        let mut rooks = [0u64; 2];
+        let mut queens = [0u64; 2];
+        let mut kings = [0u64; 2];
+
+        // Changed from 'withes' and 'blacks'
+>>>>>>> origin/master
         let mut occupied = [0u64; 2];
 
         // Part 1: Piece placement
@@ -88,6 +129,7 @@ impl Board {
 
                 if c.is_uppercase() {
                     let color_idx = Color::White as usize;
+<<<<<<< HEAD
                     occupied[color_idx] |= mask;
                     match c {
                         'P' => pieces[PieceType::Pawn as usize][color_idx] |= mask,
@@ -96,10 +138,21 @@ impl Board {
                         'R' => pieces[PieceType::Rook as usize][color_idx] |= mask,
                         'Q' => pieces[PieceType::Queen as usize][color_idx] |= mask,
                         'K' => pieces[PieceType::King as usize][color_idx] |= mask,
+=======
+                    occupied[color_idx] |= mask; // Changed
+                    match c {
+                        'P' => pawns[color_idx] |= mask,
+                        'N' => knights[color_idx] |= mask,
+                        'B' => bishops[color_idx] |= mask,
+                        'R' => rooks[color_idx] |= mask,
+                        'Q' => queens[color_idx] |= mask,
+                        'K' => kings[color_idx] |= mask,
+>>>>>>> origin/master
                         _ => {}
                     }
                 } else {
                     let color_idx = Color::Black as usize;
+<<<<<<< HEAD
                     occupied[color_idx] |= mask;
                     match c {
                         'p' => pieces[PieceType::Pawn as usize][color_idx] |= mask,
@@ -108,6 +161,16 @@ impl Board {
                         'r' => pieces[PieceType::Rook as usize][color_idx] |= mask,
                         'q' => pieces[PieceType::Queen as usize][color_idx] |= mask,
                         'k' => pieces[PieceType::King as usize][color_idx] |= mask,
+=======
+                    occupied[color_idx] |= mask; // Changed
+                    match c {
+                        'p' => pawns[color_idx] |= mask,
+                        'n' => knights[color_idx] |= mask,
+                        'b' => bishops[color_idx] |= mask,
+                        'r' => rooks[color_idx] |= mask,
+                        'q' => queens[color_idx] |= mask,
+                        'k' => kings[color_idx] |= mask,
+>>>>>>> origin/master
                         _ => {}
                     }
                 }
@@ -116,7 +179,11 @@ impl Board {
         }
 
         // Part 2: Active color
+<<<<<<< HEAD
         let side_to_move = match parts.next().unwrap_or("w") {
+=======
+        let color = match parts.next().unwrap_or("w") {
+>>>>>>> origin/master
             "b" => Color::Black,
             _ => Color::White,
         };
@@ -124,10 +191,17 @@ impl Board {
         // Part 3: Castling rights
         let mut castling_rights = 0u8;
         if let Some(castle_str) = parts.next() {
+<<<<<<< HEAD
             if castle_str.contains('K') { castling_rights |= CASTLING_WK; }
             if castle_str.contains('Q') { castling_rights |= CASTLING_WQ; }
             if castle_str.contains('k') { castling_rights |= CASTLING_BK; }
             if castle_str.contains('q') { castling_rights |= CASTLING_BQ; }
+=======
+            if castle_str.contains('K') { castling_rights |= 1; }
+            if castle_str.contains('Q') { castling_rights |= 2; }
+            if castle_str.contains('k') { castling_rights |= 4; }
+            if castle_str.contains('q') { castling_rights |= 8; }
+>>>>>>> origin/master
         }
 
         // Part 4: En passant target
@@ -138,6 +212,10 @@ impl Board {
                 let file = (chars[0] as u8 - b'a') as u8;
                 let rank = (chars[1] as u8 - b'1') as u8;
                 let sq_index = rank * 8 + file;
+<<<<<<< HEAD
+=======
+                // Convert the u8 index back to the Square enum
+>>>>>>> origin/master
                 // This is unsafe, but assumes the FEN is valid
                 Some(unsafe { mem::transmute::<u8, Square>(sq_index) })
             }
@@ -150,11 +228,25 @@ impl Board {
         let fullmove_number = parts.next().unwrap_or("1").parse::<u16>().unwrap_or(1);
 
         let all_occupied = occupied[Color::White as usize] | occupied[Color::Black as usize];
+<<<<<<< HEAD
         let empty_squares = !all_occupied;
 
         Board {
             side_to_move,
             pieces, // Geändertes Feld
+=======
+
+        let empty_squares = !all_occupied;
+
+        Board {
+            color,
+            pawns,
+            knights,
+            bishops,
+            rooks,
+            queens,
+            kings,
+>>>>>>> origin/master
             occupied,
             all_occupied,
             empty_squares,
@@ -173,8 +265,14 @@ impl Board {
         let mut empty_count = 0;
         for rank in (0..=7).rev() {
             for file in 0..=7 {
+<<<<<<< HEAD
                 let sq = (rank * 8 + file) as u8;
                 let mask = 1u64 << sq;
+=======
+                // sq is the u8 index (0-63)
+                let sq = (rank * 8 + file) as u8;
+                let mask = 1u64 << sq; // This works (u64 << u8)
+>>>>>>> origin/master
 
                 if let Some(piece) = self.get_piece_at(mask) {
                     if empty_count > 0 {
@@ -197,15 +295,26 @@ impl Board {
 
         // Part 2: Active color
         fen.push(' ');
+<<<<<<< HEAD
         fen.push(if self.side_to_move == Color::White { 'w' } else { 'b' });
+=======
+        fen.push(if self.color == Color::White { 'w' } else { 'b' });
+>>>>>>> origin/master
 
         // Part 3: Castling rights
         fen.push(' ');
         let mut castle_str = String::new();
+<<<<<<< HEAD
         if (self.castling_rights & CASTLING_WK) != 0 { castle_str.push('K'); }
         if (self.castling_rights & CASTLING_WQ) != 0 { castle_str.push('Q'); }
         if (self.castling_rights & CASTLING_BK) != 0 { castle_str.push('k'); }
         if (self.castling_rights & CASTLING_BQ) != 0 { castle_str.push('q'); }
+=======
+        if (self.castling_rights & 1) != 0 { castle_str.push('K'); }
+        if (self.castling_rights & 2) != 0 { castle_str.push('Q'); }
+        if (self.castling_rights & 4) != 0 { castle_str.push('k'); }
+        if (self.castling_rights & 8) != 0 { castle_str.push('q'); }
+>>>>>>> origin/master
 
         if castle_str.is_empty() {
             fen.push('-');
@@ -216,6 +325,10 @@ impl Board {
         // Part 4: En passant target
         fen.push(' ');
         if let Some(sq) = self.en_passant_target {
+<<<<<<< HEAD
+=======
+            // Cast the Square enum to its u8 representation
+>>>>>>> origin/master
             let sq_index = sq as u8;
             let file = (sq_index % 8) as u8;
             let rank = (sq_index / 8) as u8;
@@ -241,6 +354,7 @@ impl Board {
         let white = Color::White as usize;
         let black = Color::Black as usize;
 
+<<<<<<< HEAD
         if (self.pieces[PieceType::Pawn as usize][white] & sq_mask) != 0 { return Some('P'); }
         if (self.pieces[PieceType::Pawn as usize][black] & sq_mask) != 0 { return Some('p'); }
         if (self.pieces[PieceType::Knight as usize][white] & sq_mask) != 0 { return Some('N'); }
@@ -253,6 +367,20 @@ impl Board {
         if (self.pieces[PieceType::Queen as usize][black] & sq_mask) != 0 { return Some('q'); }
         if (self.pieces[PieceType::King as usize][white] & sq_mask) != 0 { return Some('K'); }
         if (self.pieces[PieceType::King as usize][black] & sq_mask) != 0 { return Some('k'); }
+=======
+        if (self.pawns[white] & sq_mask) != 0 { return Some('P'); }
+        if (self.pawns[black] & sq_mask) != 0 { return Some('p'); }
+        if (self.knights[white] & sq_mask) != 0 { return Some('N'); }
+        if (self.knights[black] & sq_mask) != 0 { return Some('n'); }
+        if (self.bishops[white] & sq_mask) != 0 { return Some('B'); }
+        if (self.bishops[black] & sq_mask) != 0 { return Some('b'); }
+        if (self.rooks[white] & sq_mask) != 0 { return Some('R'); }
+        if (self.rooks[black] & sq_mask) != 0 { return Some('r'); }
+        if (self.queens[white] & sq_mask) != 0 { return Some('Q'); }
+        if (self.queens[black] & sq_mask) != 0 { return Some('q'); }
+        if (self.kings[white] & sq_mask) != 0 { return Some('K'); }
+        if (self.kings[black] & sq_mask) != 0 { return Some('k'); }
+>>>>>>> origin/master
 
         None
     }
@@ -276,7 +404,11 @@ impl Board {
             println!();
         }
         println!("RAW VALUE: {}", bitboard);
+<<<<<<< HEAD
         println!();
+=======
+        println!(); // Add a newline for spacing
+>>>>>>> origin/master
     }
 
     /// Prints all internal bitboards for debugging purposes.
@@ -286,6 +418,7 @@ impl Board {
         let white = Color::White as usize;
         let black = Color::Black as usize;
 
+<<<<<<< HEAD
         self.print_bitboard("White Pawns", self.pieces[PieceType::Pawn as usize][white]);
         self.print_bitboard("Black Pawns", self.pieces[PieceType::Pawn as usize][black]);
 
@@ -305,6 +438,28 @@ impl Board {
         self.print_bitboard("Black King", self.pieces[PieceType::King as usize][black]);
 
         println!("--- Aggregate Bitboards ---");
+=======
+        self.print_bitboard("White Pawns", self.pawns[white]);
+        self.print_bitboard("Black Pawns", self.pawns[black]);
+
+        self.print_bitboard("White Knights", self.knights[white]);
+        self.print_bitboard("Black Knights", self.knights[black]);
+
+        self.print_bitboard("White Bishops", self.bishops[white]);
+        self.print_bitboard("Black Bishops", self.bishops[black]);
+
+        self.print_bitboard("White Rooks", self.rooks[white]);
+        self.print_bitboard("Black Rooks", self.rooks[black]);
+
+        self.print_bitboard("White Queens", self.queens[white]);
+        self.print_bitboard("Black Queens", self.queens[black]);
+
+        self.print_bitboard("White King", self.kings[white]);
+        self.print_bitboard("Black King", self.kings[black]);
+
+        println!("--- Aggregate Bitboards ---");
+        // Updated to use the 'occupied' array
+>>>>>>> origin/master
         self.print_bitboard("All White Pieces", self.occupied[white]);
         self.print_bitboard("All Black Pieces", self.occupied[black]);
         self.print_bitboard("All Occupied", self.all_occupied);
@@ -312,6 +467,7 @@ impl Board {
 
         println!("============================================\n");
     }
+<<<<<<< HEAD
     
     pub fn make_move(&mut self, mv: Move) {
         let from = mv.value()& MOVE_FROM_MASK;
@@ -319,10 +475,13 @@ impl Board {
         let flag = mv.value() & MOVE_FLAG_MASK;
         
         // promo must come first because of double usage of the flag bits
-        if flag & MOVE_FLAG_CAPTURE > 0 {
+        if flag == MOVE_FLAG_NO_PROMO {
             
-        } else { // No capture
+        } else { // 
             
         }
     }
 }
+=======
+}
+>>>>>>> origin/master
