@@ -4,10 +4,17 @@ use chess_engine::r#move::*;
 
 
 fn main() {
-    let board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 1 2");
+    let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     let mut move_list = MoveList::new();
     
     generate_pseudo_legal_moves(&board, &mut move_list);
-    
-    println!("Counted {} pseudo legal moves.", move_list.len());
+
+    for mv in move_list.iter() {
+        board.pretty_print_ascii();
+        println!("--> making move: {}", mv.to_algebraic());
+        let mut board_clone = board.clone();
+        board_clone.make_move(*mv);
+        board_clone.pretty_print_ascii();
+        println!("---------------------");
+    }
 }

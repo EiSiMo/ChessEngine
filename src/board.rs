@@ -45,11 +45,20 @@ pub enum PieceType {
     King = 5,
 }
 
+pub const PIECE_TYPES: [PieceType; 6] = [
+    PieceType::Pawn,
+    PieceType::Knight,
+    PieceType::Bishop,
+    PieceType::Rook,
+    PieceType::Queen,
+    PieceType::King];
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Board {
     pub side_to_move: Color,
-    
+
     pub pieces: [[u64; 2]; 6],
-    
+
     pub occupied: [u64; 2],
     pub all_occupied: u64,
     pub empty_squares: u64,
@@ -257,6 +266,27 @@ impl Board {
         None
     }
 
+    /// Prints the board as a human-readable ASCII grid.
+    pub fn pretty_print_ascii(&self) {
+        println!("\n   a b c d e f g h");
+        for rank in (0..=7).rev() {
+            print!("{}  ", rank + 1); // Rank annotation
+            for file in 0..=7 {
+                let sq = (rank * 8 + file) as u8;
+                let mask = 1u64 << sq;
+
+                if let Some(piece) = self.get_piece_at(mask) {
+                    print!("{} ", piece);
+                } else {
+                    print!(". ");
+                }
+            }
+            println!(" {}", rank + 1); // Rank annotation
+        }
+        println!("   a b c d e f g h\n");
+    }
+
+
     /// Prints a single bitboard (u64) as an 8x8 grid for debugging.
     fn print_bitboard(&self, name: &str, bitboard: u64) {
         println!("--- {} ---", name);
@@ -312,25 +342,64 @@ impl Board {
 
         println!("============================================\n");
     }
-    
-    pub fn make_move(&mut self, mv: Move) -> UndoMove {
-        let from = mv.value()& MOVE_FROM_MASK;
-        let to = mv.value() & MOVE_TO_MASK;
-        let flag = mv.value() & MOVE_FLAG_MASK;
-        
-        //// TODO keep going here actually make the move on the board <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        if flag & MOVE_FLAG_CAPTURE > 0 {
-            return UndoMove::new(mv,
-                Some(PieceType::Pawn), // PLACEHOLDER!!!!!!!!!!!!!!!!!!!!
-                self.en_passant_target,
-                self.castling_rights,
-                self.halfmove_clock);
-        } else { // No capture
-            return UndoMove::new(mv,
-                None,
-                self.en_passant_target,
-                self.castling_rights,
-                self.halfmove_clock);
+
+    fn capture_black_piece(&mut self, target_square_bitboard: u64) -> PieceType {
+        for piece_type in PIECE_TYPES {
+            if self.pieces[piece_type as usize][Color::Black as usize] & target_square_bitboard > 0 {
+                self.pieces[piece_type as usize][Color::Black as usize] ^= target_square_bitboard;
+                return piece_type;
+            }
         }
+        panic!("fn 'capture_black_piece' failed: no piece found");
+    }
+
+    fn capture_white_piece(&mut self, target_square_bitboard: u64) -> PieceType {
+        for piece_type in PIECE_TYPES {
+            if self.pieces[piece_type as usize][Color::White as usize] & target_square_bitboard > 0 {
+                self.pieces[piece_type as usize][Color::White as usize] ^= target_square_bitboard;
+                return piece_type;
+            }
+        }
+        panic!("fn 'capture_white_piece' failed: no piece found");
+    }
+
+    fn put_white_piece(&mut self, target_square_bitboard: u64, piece_type: PieceType) {
+        self.pieces[piece_type as usize][Color::White as usize] |= target_square_bitboard;
+    }
+
+    fn put_black_piece(&mut self, target_square_bitboard: u64, piece_type: PieceType) {
+        self.pieces[piece_type as usize][Color::Black as usize] |= target_square_bitboard;
+    }
+
+    pub fn make_move(&mut self, mv: Move) -> UndoMove {
+        // TODO implement .get_from, .get_to, .get_flag
+        let from = mv.value()& MOVE_FROM_MASK;
+        let to = (mv.value() & MOVE_TO_MASK) >> 6;
+        let flag = mv.value() & MOVE_FLAG_MASK;
+
+        // TODO castle, en passant, promotion
+        if self.side_to_move == Color::White {
+            return if flag & MOVE_FLAG_CAPTURE > 0 { // Capture
+                let piece_type_from = self.capture_white_piece(1_u64 << from);
+                let piece_type_capture = self.capture_black_piece(1_u64 << to);
+                self.put_white_piece(1_u64 << to, piece_type_from);
+                UndoMove::new(mv,
+                              Some(piece_type_capture),
+                              self.en_passant_target,
+                              self.castling_rights,
+                              self.halfmove_clock)
+            } else { // No capture
+                let piece_type_from = self.capture_white_piece(1_u64 << from);
+                self.put_white_piece(1_u64 << to, piece_type_from);
+                UndoMove::new(mv,
+                              None,
+                              self.en_passant_target,
+                              self.castling_rights,
+                              self.halfmove_clock)
+            }
+        } else { // Black
+
+        }
+        panic!("not yet implemented");
     }
 }
