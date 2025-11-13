@@ -1,6 +1,7 @@
-use std::fmt;
 use crate::board::{Board, Color, PieceType};
-use crate::r#move::{Move, MoveList, MOVE_FLAG_BK_CASTLE, MOVE_FLAG_BQ_CASTLE, MOVE_FLAG_PROMO_B, MOVE_FLAG_PROMO_B_CAP, MOVE_FLAG_PROMO_N, MOVE_FLAG_PROMO_N_CAP, MOVE_FLAG_PROMO_Q, MOVE_FLAG_PROMO_Q_CAP, MOVE_FLAG_PROMO_R, MOVE_FLAG_PROMO_R_CAP, MOVE_FLAG_WK_CASTLE, MOVE_FLAG_WQ_CASTLE, MOVE_FROM_MASK, MOVE_TO_MASK};
+use crate::r#move::MoveList;
+use crate::square::Square;
+use std::fmt;
 
 impl Board {
     /// Prints the board as a human-readable ASCII grid.
@@ -12,7 +13,7 @@ impl Board {
                 let sq = (rank * 8 + file) as u8;
                 let mask = 1u64 << sq;
 
-                if let Some(piece) = self.get_piece_at(mask) {
+                if let Some(piece) = self.get_piece_at_unicode(mask) {
                     print!("{} ", piece);
                 } else {
                     print!(". ");
@@ -45,7 +46,7 @@ impl Board {
         println!();
     }
 
-    /// Helper function to find which piece (as a char) is on a given square mask.
+    /// Helper function to find which piece (as a FEN char) is on a given square mask.
     pub fn get_piece_at(&self, sq_mask: u64) -> Option<char> {
         let white = Color::White as usize;
         let black = Color::Black as usize;
@@ -85,6 +86,51 @@ impl Board {
         }
         if (self.pieces[PieceType::King as usize][black] & sq_mask) != 0 {
             return Some('k');
+        }
+
+        None
+    }
+
+    /// Helper function to find which piece (as a unicode char) is on a given square mask.
+    pub fn get_piece_at_unicode(&self, sq_mask: u64) -> Option<char> {
+        let white = Color::White as usize;
+        let black = Color::Black as usize;
+
+        if (self.pieces[PieceType::Pawn as usize][white] & sq_mask) != 0 {
+            return Some('♙');
+        }
+        if (self.pieces[PieceType::Pawn as usize][black] & sq_mask) != 0 {
+            return Some('♟');
+        }
+        if (self.pieces[PieceType::Knight as usize][white] & sq_mask) != 0 {
+            return Some('♘');
+        }
+        if (self.pieces[PieceType::Knight as usize][black] & sq_mask) != 0 {
+            return Some('♞');
+        }
+        if (self.pieces[PieceType::Bishop as usize][white] & sq_mask) != 0 {
+            return Some('♗');
+        }
+        if (self.pieces[PieceType::Bishop as usize][black] & sq_mask) != 0 {
+            return Some('♝');
+        }
+        if (self.pieces[PieceType::Rook as usize][white] & sq_mask) != 0 {
+            return Some('♖');
+        }
+        if (self.pieces[PieceType::Rook as usize][black] & sq_mask) != 0 {
+            return Some('♜');
+        }
+        if (self.pieces[PieceType::Queen as usize][white] & sq_mask) != 0 {
+            return Some('♕');
+        }
+        if (self.pieces[PieceType::Queen as usize][black] & sq_mask) != 0 {
+            return Some('♛');
+        }
+        if (self.pieces[PieceType::King as usize][white] & sq_mask) != 0 {
+            return Some('♔');
+        }
+        if (self.pieces[PieceType::King as usize][black] & sq_mask) != 0 {
+            return Some('♚');
         }
 
         None
@@ -145,6 +191,85 @@ impl Board {
 
 impl fmt::Display for MoveList {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", &self.iter().map(|mv| mv.to_algebraic()).collect::<Vec<String>>().join(" "))
+        write!(
+            f,
+            "{}",
+            &self
+                .iter()
+                .map(|mv| mv.to_algebraic())
+                .collect::<Vec<String>>()
+                .join(" ")
+        )
+    }
+}
+
+impl fmt::Display for Square {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Square::A1 => write!(f, "A1"),
+            Square::B1 => write!(f, "B1"),
+            Square::C1 => write!(f, "C1"),
+            Square::D1 => write!(f, "D1"),
+            Square::E1 => write!(f, "E1"),
+            Square::F1 => write!(f, "F1"),
+            Square::G1 => write!(f, "G1"),
+            Square::H1 => write!(f, "H1"),
+            Square::A2 => write!(f, "A2"),
+            Square::B2 => write!(f, "B2"),
+            Square::C2 => write!(f, "C2"),
+            Square::D2 => write!(f, "D2"),
+            Square::E2 => write!(f, "E2"),
+            Square::F2 => write!(f, "F2"),
+            Square::G2 => write!(f, "G2"),
+            Square::H2 => write!(f, "H2"),
+            Square::A3 => write!(f, "A3"),
+            Square::B3 => write!(f, "B3"),
+            Square::C3 => write!(f, "C3"),
+            Square::D3 => write!(f, "D3"),
+            Square::E3 => write!(f, "E3"),
+            Square::F3 => write!(f, "F3"),
+            Square::G3 => write!(f, "G3"),
+            Square::H3 => write!(f, "H3"),
+            Square::A4 => write!(f, "A4"),
+            Square::B4 => write!(f, "B4"),
+            Square::C4 => write!(f, "C4"),
+            Square::D4 => write!(f, "D4"),
+            Square::E4 => write!(f, "E4"),
+            Square::F4 => write!(f, "F4"),
+            Square::G4 => write!(f, "G4"),
+            Square::H4 => write!(f, "H4"),
+            Square::A5 => write!(f, "A5"),
+            Square::B5 => write!(f, "B5"),
+            Square::C5 => write!(f, "C5"),
+            Square::D5 => write!(f, "D5"),
+            Square::E5 => write!(f, "E5"),
+            Square::F5 => write!(f, "F5"),
+            Square::G5 => write!(f, "G5"),
+            Square::H5 => write!(f, "H5"),
+            Square::A6 => write!(f, "A6"),
+            Square::B6 => write!(f, "B6"),
+            Square::C6 => write!(f, "C6"),
+            Square::D6 => write!(f, "D6"),
+            Square::E6 => write!(f, "E6"),
+            Square::F6 => write!(f, "F6"),
+            Square::G6 => write!(f, "G6"),
+            Square::H6 => write!(f, "H6"),
+            Square::A7 => write!(f, "A7"),
+            Square::B7 => write!(f, "B7"),
+            Square::C7 => write!(f, "C7"),
+            Square::D7 => write!(f, "D7"),
+            Square::E7 => write!(f, "E7"),
+            Square::F7 => write!(f, "F7"),
+            Square::G7 => write!(f, "G7"),
+            Square::H7 => write!(f, "H7"),
+            Square::A8 => write!(f, "A8"),
+            Square::B8 => write!(f, "B8"),
+            Square::C8 => write!(f, "C8"),
+            Square::D8 => write!(f, "D8"),
+            Square::E8 => write!(f, "E8"),
+            Square::F8 => write!(f, "F8"),
+            Square::G8 => write!(f, "G8"),
+            Square::H8 => write!(f, "H8")
+        }
     }
 }
