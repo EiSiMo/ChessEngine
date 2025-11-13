@@ -10,11 +10,10 @@ fn main() {
     generate_pseudo_legal_moves(&board, &mut move_list);
 
     for mv in move_list.iter() {
-        board.pretty_print_ascii();
+        board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         println!("--> making move: {}", mv.to_algebraic());
-        let mut board_clone = board.clone();
-        board_clone.make_move(*mv);
-        board_clone.pretty_print_ascii();
+        board.make_move(*mv);
+        board.pretty_print_ascii();
         println!("---------------------");
     }
 }

@@ -52,7 +52,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         while double_push_targets > 0 {
             let to = SQUARES[double_push_targets.trailing_zeros() as usize];
             let from = to - 16;
-            list.push(Move::new(from, to, MOVE_FLAG_QUIET));
+            list.push(Move::new(from, to, MOVE_FLAG_DOUBLE_PAWN));
             double_push_targets &= double_push_targets - 1;
         }
 
@@ -149,7 +149,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
 
         while single_push_targets > 0 {
             let to = SQUARES[single_push_targets.trailing_zeros() as usize];
-            let from = to + 8;
+            let from = to + 8_u8;
             list.push(Move::new(from, to, MOVE_FLAG_QUIET));
             single_push_targets &= single_push_targets - 1;
         }
@@ -161,8 +161,8 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
 
         while double_push_targets > 0 {
             let to = SQUARES[double_push_targets.trailing_zeros() as usize];
-            let from = to + 16;
-            list.push(Move::new(from, to, MOVE_FLAG_QUIET));
+            let from = to + 16_u8;
+            list.push(Move::new(from, to, MOVE_FLAG_DOUBLE_PAWN));
             double_push_targets &= double_push_targets - 1;
         }
 
@@ -172,7 +172,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
 
         while a_side_capture_targets > 0 {
             let to = SQUARES[a_side_capture_targets.trailing_zeros() as usize];
-            let from = to + 9;
+            let from = to + 9_u8;
             list.push(Move::new(from, to, MOVE_FLAG_CAPTURE));
             a_side_capture_targets &= a_side_capture_targets - 1;
         }
@@ -182,7 +182,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
 
         while h_side_capture_targets > 0 {
             let to = SQUARES[h_side_capture_targets.trailing_zeros() as usize];
-            let from = to + 7;
+            let from = to + 7_u8;
             list.push(Move::new(from, to, MOVE_FLAG_CAPTURE));
             h_side_capture_targets &= h_side_capture_targets - 1;
         }
@@ -193,7 +193,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
 
         while promotion_targets > 0 {
             let to = SQUARES[promotion_targets.trailing_zeros() as usize];
-            let from = to + 8;
+            let from = to + 8_u8;
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_Q));
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_R));
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_B));
@@ -206,7 +206,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         let mut promotion_targets_a_side_capture = ((friendly_pawns & PAWN_A_SIDE_CAPTURE_PROMOTION_MASK_BLACK) >> 9) & opponent_occupied;
         while promotion_targets_a_side_capture > 0 {
             let to = SQUARES[promotion_targets_a_side_capture.trailing_zeros() as usize];
-            let from = to + 9;
+            let from = to + 9_u8;
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_N_CAP));
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_B_CAP));
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_R_CAP));
@@ -218,7 +218,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         let mut promotion_targets_h_side_capture = ((friendly_pawns & PAWN_H_SIDE_CAPTURE_PROMOTION_MASK_BLACK) >> 7) & opponent_occupied;
         while promotion_targets_h_side_capture > 0 {
             let to = SQUARES[promotion_targets_h_side_capture.trailing_zeros() as usize];
-            let from = to + 7;
+            let from = to + 7_u8;
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_N_CAP));
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_B_CAP));
             list.push(Move::new(from, to, MOVE_FLAG_PROMO_R_CAP));
@@ -235,14 +235,14 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
                 // 1. Check A-Side capture (>> 9, e.g., B4 -> A3)
                 let attacker_mask_a_side = (en_passant_target_bb << 9) & PAWN_A_SIDE_CAPTURE_MASK_BLACK;
                 if (attacker_mask_a_side & friendly_pawns) > 0 {
-                    let from = en_passant_target_square + 9;
+                    let from = en_passant_target_square + 9_u8;
                     list.push(Move::new(from, en_passant_target_square, MOVE_FLAG_EN_PASSANT));
                 }
 
                 // 2. Check H-Side capture (>> 7, e.g., G4 -> H3)
                 let attacker_mask_h_side = (en_passant_target_bb << 7) & PAWN_H_SIDE_CAPTURE_MASK_BLACK;
                 if (attacker_mask_h_side & friendly_pawns) > 0 {
-                    let from = en_passant_target_square + 7;
+                    let from = en_passant_target_square + 7_u8;
                     list.push(Move::new(from, en_passant_target_square, MOVE_FLAG_EN_PASSANT));
                 }
             }

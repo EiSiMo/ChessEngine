@@ -1,20 +1,27 @@
-use crate::square::Square;
-use std::mem;
 use crate::r#move::*;
+use crate::square::{Square, SQUARES};
+use std::mem;
 use std::ops::Not;
 
-pub const CASTLING_WK: u8 = 1;
+pub const CASTLING_WK_FLAG: u8 = 1;
 pub const CASTLING_WK_MASK: u64 = 96; // F1 G1
+pub const CASTLING_WK_K_POS_MASK: u64 = 16; // E1
+pub const CASTLING_WK_R_POS_MASK: u64 = 128; // H1
 
-pub const CASTLING_WQ: u8 = 2;
+pub const CASTLING_WQ_FLAG: u8 = 2;
 pub const CASTLING_WQ_MASK: u64 = 14; // B1 C1 D1
+pub const CASTLING_WQ_K_POS_MASK: u64 = 16; // E1
+pub const CASTLING_WQ_R_POS_MASK: u64 = 1; // A1
 
-pub const CASTLING_BK: u8 = 4;
+pub const CASTLING_BK_FLAG: u8 = 4;
 pub const CASTLING_BK_MASK: u64 = 6917529027641081856; // F8 G8
+pub const CASTLING_BK_K_POS_MASK: u64 = 1152921504606846976; // E8
+pub const CASTLING_BK_R_POS_MASK: u64 = 9223372036854775808; // H8
 
-pub const CASTLING_BQ: u8 = 8;
+pub const CASTLING_BQ_FLAG: u8 = 8;
 pub const CASTLING_BQ_MASK: u64 = 1008806316530991104; // B8 C8 D8
-
+pub const CASTLING_BQ_K_POS_MASK: u64 = 1152921504606846976; // E8
+pub const CASTLING_BQ_R_POS_MASK: u64 = 72057594037927936; // A8
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -51,13 +58,15 @@ pub const PIECE_TYPES: [PieceType; 6] = [
     PieceType::Bishop,
     PieceType::Rook,
     PieceType::Queen,
-    PieceType::King];
+    PieceType::King,
+];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Board {
     pub side_to_move: Color,
 
     pub pieces: [[u64; 2]; 6],
+    pub pieces_on_squares: [Option<PieceType>; 64], // <-- ADDED
 
     pub occupied: [u64; 2],
     pub all_occupied: u64,
@@ -76,9 +85,10 @@ impl Board {
     pub fn from_fen(fen: &str) -> Self {
         let mut parts = fen.split_whitespace();
 
-        // Initialisiere das 2D-Array
+        // Initialisiere die Arrays
         let mut pieces = [[0u64; 2]; 6];
         let mut occupied = [0u64; 2];
+        let mut pieces_on_squares = [None; 64]; // <-- ADDED
 
         // Part 1: Piece placement
         let placement = parts.next().unwrap_or("");
@@ -99,24 +109,60 @@ impl Board {
                     let color_idx = Color::White as usize;
                     occupied[color_idx] |= mask;
                     match c {
-                        'P' => pieces[PieceType::Pawn as usize][color_idx] |= mask,
-                        'N' => pieces[PieceType::Knight as usize][color_idx] |= mask,
-                        'B' => pieces[PieceType::Bishop as usize][color_idx] |= mask,
-                        'R' => pieces[PieceType::Rook as usize][color_idx] |= mask,
-                        'Q' => pieces[PieceType::Queen as usize][color_idx] |= mask,
-                        'K' => pieces[PieceType::King as usize][color_idx] |= mask,
+                        'P' => {
+                            pieces[PieceType::Pawn as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Pawn); // <-- ADDED
+                        }
+                        'N' => {
+                            pieces[PieceType::Knight as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Knight); // <-- ADDED
+                        }
+                        'B' => {
+                            pieces[PieceType::Bishop as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Bishop); // <-- ADDED
+                        }
+                        'R' => {
+                            pieces[PieceType::Rook as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Rook); // <-- ADDED
+                        }
+                        'Q' => {
+                            pieces[PieceType::Queen as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Queen); // <-- ADDED
+                        }
+                        'K' => {
+                            pieces[PieceType::King as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::King); // <-- ADDED
+                        }
                         _ => {}
                     }
                 } else {
                     let color_idx = Color::Black as usize;
                     occupied[color_idx] |= mask;
                     match c {
-                        'p' => pieces[PieceType::Pawn as usize][color_idx] |= mask,
-                        'n' => pieces[PieceType::Knight as usize][color_idx] |= mask,
-                        'b' => pieces[PieceType::Bishop as usize][color_idx] |= mask,
-                        'r' => pieces[PieceType::Rook as usize][color_idx] |= mask,
-                        'q' => pieces[PieceType::Queen as usize][color_idx] |= mask,
-                        'k' => pieces[PieceType::King as usize][color_idx] |= mask,
+                        'p' => {
+                            pieces[PieceType::Pawn as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Pawn); // <-- ADDED
+                        }
+                        'n' => {
+                            pieces[PieceType::Knight as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Knight); // <-- ADDED
+                        }
+                        'b' => {
+                            pieces[PieceType::Bishop as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Bishop); // <-- ADDED
+                        }
+                        'r' => {
+                            pieces[PieceType::Rook as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Rook); // <-- ADDED
+                        }
+                        'q' => {
+                            pieces[PieceType::Queen as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::Queen); // <-- ADDED
+                        }
+                        'k' => {
+                            pieces[PieceType::King as usize][color_idx] |= mask;
+                            pieces_on_squares[sq as usize] = Some(PieceType::King); // <-- ADDED
+                        }
                         _ => {}
                     }
                 }
@@ -133,10 +179,18 @@ impl Board {
         // Part 3: Castling rights
         let mut castling_rights = 0u8;
         if let Some(castle_str) = parts.next() {
-            if castle_str.contains('K') { castling_rights |= CASTLING_WK; }
-            if castle_str.contains('Q') { castling_rights |= CASTLING_WQ; }
-            if castle_str.contains('k') { castling_rights |= CASTLING_BK; }
-            if castle_str.contains('q') { castling_rights |= CASTLING_BQ; }
+            if castle_str.contains('K') {
+                castling_rights |= CASTLING_WK_FLAG;
+            }
+            if castle_str.contains('Q') {
+                castling_rights |= CASTLING_WQ_FLAG;
+            }
+            if castle_str.contains('k') {
+                castling_rights |= CASTLING_BK_FLAG;
+            }
+            if castle_str.contains('q') {
+                castling_rights |= CASTLING_BQ_FLAG;
+            }
         }
 
         // Part 4: En passant target
@@ -163,7 +217,8 @@ impl Board {
 
         Board {
             side_to_move,
-            pieces, // Geändertes Feld
+            pieces,
+            pieces_on_squares, // <-- ADDED
             occupied,
             all_occupied,
             empty_squares,
@@ -206,15 +261,27 @@ impl Board {
 
         // Part 2: Active color
         fen.push(' ');
-        fen.push(if self.side_to_move == Color::White { 'w' } else { 'b' });
+        fen.push(if self.side_to_move == Color::White {
+            'w'
+        } else {
+            'b'
+        });
 
         // Part 3: Castling rights
         fen.push(' ');
         let mut castle_str = String::new();
-        if (self.castling_rights & CASTLING_WK) != 0 { castle_str.push('K'); }
-        if (self.castling_rights & CASTLING_WQ) != 0 { castle_str.push('Q'); }
-        if (self.castling_rights & CASTLING_BK) != 0 { castle_str.push('k'); }
-        if (self.castling_rights & CASTLING_BQ) != 0 { castle_str.push('q'); }
+        if (self.castling_rights & CASTLING_WK_FLAG) != 0 {
+            castle_str.push('K');
+        }
+        if (self.castling_rights & CASTLING_WQ_FLAG) != 0 {
+            castle_str.push('Q');
+        }
+        if (self.castling_rights & CASTLING_BK_FLAG) != 0 {
+            castle_str.push('k');
+        }
+        if (self.castling_rights & CASTLING_BQ_FLAG) != 0 {
+            castle_str.push('q');
+        }
 
         if castle_str.is_empty() {
             fen.push('-');
@@ -250,18 +317,42 @@ impl Board {
         let white = Color::White as usize;
         let black = Color::Black as usize;
 
-        if (self.pieces[PieceType::Pawn as usize][white] & sq_mask) != 0 { return Some('P'); }
-        if (self.pieces[PieceType::Pawn as usize][black] & sq_mask) != 0 { return Some('p'); }
-        if (self.pieces[PieceType::Knight as usize][white] & sq_mask) != 0 { return Some('N'); }
-        if (self.pieces[PieceType::Knight as usize][black] & sq_mask) != 0 { return Some('n'); }
-        if (self.pieces[PieceType::Bishop as usize][white] & sq_mask) != 0 { return Some('B'); }
-        if (self.pieces[PieceType::Bishop as usize][black] & sq_mask) != 0 { return Some('b'); }
-        if (self.pieces[PieceType::Rook as usize][white] & sq_mask) != 0 { return Some('R'); }
-        if (self.pieces[PieceType::Rook as usize][black] & sq_mask) != 0 { return Some('r'); }
-        if (self.pieces[PieceType::Queen as usize][white] & sq_mask) != 0 { return Some('Q'); }
-        if (self.pieces[PieceType::Queen as usize][black] & sq_mask) != 0 { return Some('q'); }
-        if (self.pieces[PieceType::King as usize][white] & sq_mask) != 0 { return Some('K'); }
-        if (self.pieces[PieceType::King as usize][black] & sq_mask) != 0 { return Some('k'); }
+        if (self.pieces[PieceType::Pawn as usize][white] & sq_mask) != 0 {
+            return Some('P');
+        }
+        if (self.pieces[PieceType::Pawn as usize][black] & sq_mask) != 0 {
+            return Some('p');
+        }
+        if (self.pieces[PieceType::Knight as usize][white] & sq_mask) != 0 {
+            return Some('N');
+        }
+        if (self.pieces[PieceType::Knight as usize][black] & sq_mask) != 0 {
+            return Some('n');
+        }
+        if (self.pieces[PieceType::Bishop as usize][white] & sq_mask) != 0 {
+            return Some('B');
+        }
+        if (self.pieces[PieceType::Bishop as usize][black] & sq_mask) != 0 {
+            return Some('b');
+        }
+        if (self.pieces[PieceType::Rook as usize][white] & sq_mask) != 0 {
+            return Some('R');
+        }
+        if (self.pieces[PieceType::Rook as usize][black] & sq_mask) != 0 {
+            return Some('r');
+        }
+        if (self.pieces[PieceType::Queen as usize][white] & sq_mask) != 0 {
+            return Some('Q');
+        }
+        if (self.pieces[PieceType::Queen as usize][black] & sq_mask) != 0 {
+            return Some('q');
+        }
+        if (self.pieces[PieceType::King as usize][white] & sq_mask) != 0 {
+            return Some('K');
+        }
+        if (self.pieces[PieceType::King as usize][black] & sq_mask) != 0 {
+            return Some('k');
+        }
 
         None
     }
@@ -285,7 +376,6 @@ impl Board {
         }
         println!("   a b c d e f g h\n");
     }
-
 
     /// Prints a single bitboard (u64) as an 8x8 grid for debugging.
     fn print_bitboard(&self, name: &str, bitboard: u64) {
@@ -319,17 +409,35 @@ impl Board {
         self.print_bitboard("White Pawns", self.pieces[PieceType::Pawn as usize][white]);
         self.print_bitboard("Black Pawns", self.pieces[PieceType::Pawn as usize][black]);
 
-        self.print_bitboard("White Knights", self.pieces[PieceType::Knight as usize][white]);
-        self.print_bitboard("Black Knights", self.pieces[PieceType::Knight as usize][black]);
+        self.print_bitboard(
+            "White Knights",
+            self.pieces[PieceType::Knight as usize][white],
+        );
+        self.print_bitboard(
+            "Black Knights",
+            self.pieces[PieceType::Knight as usize][black],
+        );
 
-        self.print_bitboard("White Bishops", self.pieces[PieceType::Bishop as usize][white]);
-        self.print_bitboard("Black Bishops", self.pieces[PieceType::Bishop as usize][black]);
+        self.print_bitboard(
+            "White Bishops",
+            self.pieces[PieceType::Bishop as usize][white],
+        );
+        self.print_bitboard(
+            "Black Bishops",
+            self.pieces[PieceType::Bishop as usize][black],
+        );
 
         self.print_bitboard("White Rooks", self.pieces[PieceType::Rook as usize][white]);
         self.print_bitboard("Black Rooks", self.pieces[PieceType::Rook as usize][black]);
 
-        self.print_bitboard("White Queens", self.pieces[PieceType::Queen as usize][white]);
-        self.print_bitboard("Black Queens", self.pieces[PieceType::Queen as usize][black]);
+        self.print_bitboard(
+            "White Queens",
+            self.pieces[PieceType::Queen as usize][white],
+        );
+        self.print_bitboard(
+            "Black Queens",
+            self.pieces[PieceType::Queen as usize][black],
+        );
 
         self.print_bitboard("White King", self.pieces[PieceType::King as usize][white]);
         self.print_bitboard("Black King", self.pieces[PieceType::King as usize][black]);
@@ -343,63 +451,196 @@ impl Board {
         println!("============================================\n");
     }
 
-    fn capture_black_piece(&mut self, target_square_bitboard: u64) -> PieceType {
+    fn clear_square(&mut self, target_square: Square, color: Color) -> PieceType {
+        let target_square_bitboard = target_square.to_bitboard();
+
+        // update occupancy helper bitboards
+        self.occupied[color as usize] ^= target_square_bitboard;
+        self.all_occupied ^= target_square_bitboard;
+        self.empty_squares |= target_square_bitboard;
+
+        self.pieces_on_squares[target_square as usize] = None; // <-- ADDED
+
         for piece_type in PIECE_TYPES {
-            if self.pieces[piece_type as usize][Color::Black as usize] & target_square_bitboard > 0 {
-                self.pieces[piece_type as usize][Color::Black as usize] ^= target_square_bitboard;
+            if self.pieces[piece_type as usize][color as usize] & target_square_bitboard > 0 {
+                self.pieces[piece_type as usize][color as usize] ^= target_square_bitboard;
                 return piece_type;
             }
         }
-        panic!("fn 'capture_black_piece' failed: no piece found");
+        panic!("fn 'clear_square' failed: no piece found");
     }
 
-    fn capture_white_piece(&mut self, target_square_bitboard: u64) -> PieceType {
-        for piece_type in PIECE_TYPES {
-            if self.pieces[piece_type as usize][Color::White as usize] & target_square_bitboard > 0 {
-                self.pieces[piece_type as usize][Color::White as usize] ^= target_square_bitboard;
-                return piece_type;
-            }
-        }
-        panic!("fn 'capture_white_piece' failed: no piece found");
+    fn remove_specific_piece(
+        &mut self,
+        target_square: Square,
+        color: Color,
+        piece_type: PieceType,
+    ) {
+        let target_square_bitboard = target_square.to_bitboard();
+        self.pieces[piece_type as usize][color as usize] ^= target_square_bitboard;
+
+        self.pieces_on_squares[target_square as usize] = None; // <-- ADDED
+
+        // update occupancy helper bitboards
+        self.occupied[color as usize] ^= target_square_bitboard;
+        self.all_occupied ^= target_square_bitboard;
+        self.empty_squares |= target_square_bitboard;
     }
 
-    fn put_white_piece(&mut self, target_square_bitboard: u64, piece_type: PieceType) {
-        self.pieces[piece_type as usize][Color::White as usize] |= target_square_bitboard;
-    }
+    fn put_piece(&mut self, target_square: Square, color: Color, piece_type: PieceType) {
+        let target_square_bitboard = target_square.to_bitboard();
+        self.pieces[piece_type as usize][color as usize] |= target_square_bitboard;
 
-    fn put_black_piece(&mut self, target_square_bitboard: u64, piece_type: PieceType) {
-        self.pieces[piece_type as usize][Color::Black as usize] |= target_square_bitboard;
+        self.pieces_on_squares[target_square as usize] = Some(piece_type); // <-- ADDED
+
+        // update occupancy helper bitboards
+        self.occupied[color as usize] |= target_square_bitboard;
+        self.all_occupied |= target_square_bitboard;
+        self.empty_squares ^= target_square_bitboard;
     }
 
     pub fn make_move(&mut self, mv: Move) -> UndoMove {
-        // TODO implement .get_from, .get_to, .get_flag
-        let from = mv.value()& MOVE_FROM_MASK;
-        let to = (mv.value() & MOVE_TO_MASK) >> 6;
-        let flag = mv.value() & MOVE_FLAG_MASK;
+        let from = mv.get_from();
+        let to = mv.get_to();
+        let flags = mv.get_flags();
 
-        // TODO castle, en passant, promotion
-        if self.side_to_move == Color::White {
-            return if flag & MOVE_FLAG_CAPTURE > 0 { // Capture
-                let piece_type_from = self.capture_white_piece(1_u64 << from);
-                let piece_type_capture = self.capture_black_piece(1_u64 << to);
-                self.put_white_piece(1_u64 << to, piece_type_from);
-                UndoMove::new(mv,
-                              Some(piece_type_capture),
-                              self.en_passant_target,
-                              self.castling_rights,
-                              self.halfmove_clock)
-            } else { // No capture
-                let piece_type_from = self.capture_white_piece(1_u64 << from);
-                self.put_white_piece(1_u64 << to, piece_type_from);
-                UndoMove::new(mv,
-                              None,
-                              self.en_passant_target,
-                              self.castling_rights,
-                              self.halfmove_clock)
+        let old_en_passant_target: Option<Square> = self.en_passant_target;
+        let old_castling_rights: u8 = self.castling_rights;
+        let old_halfmove_clock: u8 = self.halfmove_clock;
+
+        // needed for half move tracking
+        let old_friendly_pawns = self.pieces[PieceType::Pawn as usize][self.side_to_move as usize];
+        let old_total_pieces = self.all_occupied.count_ones();
+
+        let mut opt_captured_piece: Option<PieceType> = None;
+        let mut opt_en_passant_target: Option<Square> = None;
+
+        match flags {
+            MOVE_FLAG_QUIET => {
+                let piece_type_from = self.clear_square(from, self.side_to_move);
+                self.put_piece(to, self.side_to_move, piece_type_from);
             }
-        } else { // Black
-
+            MOVE_FLAG_CAPTURE => {
+                let piece_type_from = self.clear_square(from, self.side_to_move);
+                opt_captured_piece = Some(self.clear_square(to, !self.side_to_move));
+                self.put_piece(to, self.side_to_move, piece_type_from);
+            }
+            MOVE_FLAG_DOUBLE_PAWN => {
+                let piece_type_from = self.clear_square(from, self.side_to_move);
+                self.put_piece(to, self.side_to_move, piece_type_from);
+                opt_en_passant_target = Some(to + (self.side_to_move as i8 * 16 - 8));
+            }
+            MOVE_FLAG_PROMO_Q => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                self.put_piece(to, self.side_to_move, PieceType::Queen);
+            }
+            MOVE_FLAG_PROMO_N => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                self.put_piece(to, self.side_to_move, PieceType::Knight);
+            }
+            MOVE_FLAG_PROMO_B => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                self.put_piece(to, self.side_to_move, PieceType::Bishop);
+            }
+            MOVE_FLAG_PROMO_R => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                self.put_piece(to, self.side_to_move, PieceType::Rook);
+            }
+            MOVE_FLAG_PROMO_Q_CAP => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                opt_captured_piece = Some(self.clear_square(to, !self.side_to_move));
+                self.put_piece(to, self.side_to_move, PieceType::Queen);
+            }
+            MOVE_FLAG_PROMO_N_CAP => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                opt_captured_piece = Some(self.clear_square(to, !self.side_to_move));
+                self.put_piece(to, self.side_to_move, PieceType::Knight);
+            }
+            MOVE_FLAG_PROMO_B_CAP => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                opt_captured_piece = Some(self.clear_square(to, !self.side_to_move));
+                self.put_piece(to, self.side_to_move, PieceType::Bishop);
+            }
+            MOVE_FLAG_PROMO_R_CAP => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                opt_captured_piece = Some(self.clear_square(to, !self.side_to_move));
+                self.put_piece(to, self.side_to_move, PieceType::Rook);
+            }
+            MOVE_FLAG_WK_CASTLE => {
+                self.remove_specific_piece(Square::E1, Color::White, PieceType::King);
+                self.remove_specific_piece(Square::H1, Color::White, PieceType::Rook);
+                self.put_piece(Square::G1, Color::White, PieceType::King);
+                self.put_piece(Square::F1, Color::White, PieceType::Rook);
+            }
+            MOVE_FLAG_BK_CASTLE => {
+                self.remove_specific_piece(Square::E8, Color::Black, PieceType::King);
+                self.remove_specific_piece(Square::H8, Color::Black, PieceType::Rook);
+                self.put_piece(Square::G8, Color::Black, PieceType::King);
+                self.put_piece(Square::F8, Color::Black, PieceType::Rook);
+            }
+            MOVE_FLAG_WQ_CASTLE => {
+                self.remove_specific_piece(Square::E1, Color::White, PieceType::King);
+                self.remove_specific_piece(Square::A1, Color::White, PieceType::Rook);
+                self.put_piece(Square::C1, Color::White, PieceType::King);
+                self.put_piece(Square::D1, Color::White, PieceType::Rook);
+            }
+            MOVE_FLAG_BQ_CASTLE => {
+                self.remove_specific_piece(Square::E8, Color::Black, PieceType::King);
+                self.remove_specific_piece(Square::A8, Color::Black, PieceType::Rook);
+                self.put_piece(Square::C8, Color::Black, PieceType::King);
+                self.put_piece(Square::D8, Color::Black, PieceType::Rook);
+            }
+            MOVE_FLAG_EN_PASSANT => {
+                self.remove_specific_piece(from, self.side_to_move, PieceType::Pawn);
+                if self.side_to_move == Color::White {
+                    self.remove_specific_piece(to - 8_u8, !self.side_to_move, PieceType::Pawn);
+                } else {
+                    self.remove_specific_piece(to + 8_u8, !self.side_to_move, PieceType::Pawn);
+                }
+                opt_captured_piece = Some(PieceType::Pawn);
+                self.put_piece(to, self.side_to_move, PieceType::Pawn);
+            }
+            _ => {
+                panic!("unable to make_move: invalid flags: {}", flags);
+            }
         }
-        panic!("not yet implemented");
+
+        // set castle rights
+        let wk = self.pieces[PieceType::King as usize][Color::White as usize];
+        let wr = self.pieces[PieceType::Rook as usize][Color::White as usize];
+        let bk = self.pieces[PieceType::King as usize][Color::Black as usize];
+        let br = self.pieces[PieceType::Rook as usize][Color::Black as usize];
+        let castling_right_wk = ((wk & CASTLING_WK_K_POS_MASK) > 0 && (wr & CASTLING_WK_R_POS_MASK) > 0) as u8;
+        let castling_right_wq = (((wk & CASTLING_WQ_K_POS_MASK) > 0 && (wr & CASTLING_WQ_R_POS_MASK) > 0) as u8) << 1;
+        let castling_right_bk = (((bk & CASTLING_BK_K_POS_MASK) > 0 && (br & CASTLING_BK_R_POS_MASK) > 0) as u8) << 2;
+        let castling_right_bq = (((bk & CASTLING_BQ_K_POS_MASK) > 0 && (br & CASTLING_BQ_R_POS_MASK) > 0) as u8) << 3;
+        let new_castling_rights =
+            castling_right_wk | castling_right_wq | castling_right_bk | castling_right_bq;
+        self.castling_rights = self.castling_rights & new_castling_rights; // & operator makes sure castling rights cant be gained back
+
+        // set new en passant target
+        self.en_passant_target = opt_en_passant_target;
+
+        // increase halfmove clock by 1 if no pawn was pushed and now piece captured
+        let new_friendly_pawns = self.pieces[PieceType::Pawn as usize][self.side_to_move as usize];
+        let new_total_pieces = self.all_occupied.count_ones();
+        let pawns_changed = old_friendly_pawns ^ new_friendly_pawns;
+        let piece_captured = (old_total_pieces - new_total_pieces) as u64;
+        let increase_halfmove_clock = ((pawns_changed + piece_captured) == 0) as u8;
+        self.halfmove_clock = increase_halfmove_clock * (self.halfmove_clock + 1);
+
+        // increase full move number by 1 when black made a move
+        self.fullmove_number += self.side_to_move as u16;
+
+        // flip the side to move
+        self.side_to_move = !self.side_to_move;
+
+        UndoMove::new(
+            mv,
+            opt_captured_piece,
+            old_en_passant_target,
+            old_castling_rights,
+            old_halfmove_clock,
+        )
     }
 }

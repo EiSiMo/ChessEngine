@@ -81,6 +81,12 @@ pub const SQUARES: [Square; 64] = [
     Square::A8, Square::B8, Square::C8, Square::D8, Square::E8, Square::F8, Square::G8, Square::H8,
 ];
 
+impl Square {
+    pub fn to_bitboard(&self) -> u64 {
+        1_u64 << (*self as u8)
+    }
+}
+
 impl TryFrom<u8> for Square {
     type Error = &'static str;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
@@ -100,6 +106,16 @@ impl Add<u8> for Square {
         new_val.try_into().expect("Square addition resulted in an invalid square")
     }
 }
+
+impl Add<i8> for Square {
+    type Output = Self;
+
+    fn add(self, rhs: i8) -> Self::Output {
+        let new_val = ((self as i8) + rhs) as u8;
+        new_val.try_into().expect("Square addition resulted in an invalid square")
+    }
+}
+
 
 impl Sub<u8> for Square {
     type Output = Self;

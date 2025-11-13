@@ -2,6 +2,7 @@ use std::slice;
 use std::fmt;
 use crate::square::Square;
 use crate::board::PieceType;
+use crate::square::SQUARES;
 
 // BIT 0 - 5: FROM SQUARE (0-63)
 pub const MOVE_FROM_MASK: u16 = 0b0000_0000_0011_1111;
@@ -14,6 +15,7 @@ pub const MOVE_FLAG_MASK: u16 = 0b1111_0000_0000_0000;
 
 pub const MOVE_FLAG_QUIET: u16 = 0b0000_0000_0000_0000;
 pub const MOVE_FLAG_CAPTURE: u16 = 0b0001_0000_0000_0000;
+pub const MOVE_FLAG_DOUBLE_PAWN: u16 = 0b0010_0000_0000_0000;
 pub const MOVE_FLAG_EN_PASSANT: u16 = 0b0011_0000_0000_0000;
 
 // Castle flags
@@ -27,6 +29,7 @@ pub const MOVE_FLAG_BQ_CASTLE: u16 = 0b0111_0000_0000_0000;
 
 // Promotion flags (use the 1xxx bits)
 // We combine capture flag with promotion type
+pub const MOVE_MASK_PROMO: u16 = 0b1000_0000_0000_0000;
 pub const MOVE_FLAG_PROMO: u16 = 0b1000_0000_0000_0000;
 
 pub const MOVE_FLAG_PROMO_N: u16 = 0b1000_0000_0000_0000;
@@ -47,14 +50,23 @@ impl Move {
             ((to as u16) << 6 ) |
             from as u16)
     }
-    
-    pub fn value(&self) -> u16 {
-        self.0
-    }
-    
+
+
     #[inline(always)]
     pub fn get_flags(&self) -> u16 {
         self.0 & MOVE_FLAG_MASK
+    }
+
+    #[inline(always)]
+    pub fn get_from(&self) -> Square {
+        SQUARES[(self.0 & MOVE_FROM_MASK) as usize]
+    }
+
+    #[inline(always)]
+    pub fn get_to(&self) -> Square {
+        // --- KORREKTUR HIER ---
+        // Die Klammern um (self.0 & MOVE_TO_MASK) sind entscheidend
+        SQUARES[((self.0 & MOVE_TO_MASK) >> 6) as usize]
     }
 
 
@@ -68,7 +80,7 @@ impl Move {
     /// Converts the move to coordinate notation (e.g., "e2e4", "e7e8q", "e1g1").
     pub fn to_algebraic(&self) -> String {
         let flags = self.get_flags();
-        
+
         // Handle castling first. In this new format, the "to" square is
         // the *king's* destination square (g1/c1 or g8/c8).
         // Your old implementation reading the file is still fine.
@@ -158,17 +170,17 @@ pub struct UndoMove {
 
 impl UndoMove {
     pub fn new(mv: Move,
-        captured_piece: Option<PieceType>,
-        old_en_passant_square: Option<Square>,
-        old_castling_rights: u8,
-        old_halfmove_clock: u8) -> Self {
-            Self {
-                mv,
-                captured_piece,
-                old_en_passant_square,
-                old_castling_rights,
-                old_halfmove_clock
-            }
-            
+               captured_piece: Option<PieceType>,
+               old_en_passant_square: Option<Square>,
+               old_castling_rights: u8,
+               old_halfmove_clock: u8) -> Self {
+        Self {
+            mv,
+            captured_piece,
+            old_en_passant_square,
+            old_castling_rights,
+            old_halfmove_clock
         }
+
+    }
 }

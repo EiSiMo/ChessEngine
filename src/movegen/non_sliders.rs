@@ -30,6 +30,7 @@ pub fn generate_knight_moves(board: &Board, list: &mut MoveList) {
 }
 
 pub fn generate_king_moves(board: &Board, list: &mut MoveList) {
+    // TODO no castle when square or piece under attack
     let enemy_occupied = board.occupied[!board.side_to_move as usize];
     let friendly_king = board.pieces[PieceType::King as usize][board.side_to_move as usize];
 
@@ -59,26 +60,26 @@ pub fn generate_king_moves(board: &Board, list: &mut MoveList) {
     // 2. Generate castling king moves
     if board.side_to_move == Color::White {
         // Kingside (OO)
-        if (board.castling_rights & CASTLING_WK) != 0 {
+        if (board.castling_rights & CASTLING_WK_FLAG) != 0 {
             if (board.all_occupied & CASTLING_WK_MASK) == 0 {
                 list.push(Move::new(Square::E1, Square::G1, MOVE_FLAG_WK_CASTLE));
             }
         }
         // Queenside (OOO)
-        if (board.castling_rights & CASTLING_WQ) != 0 {
+        if (board.castling_rights & CASTLING_WQ_FLAG) != 0 {
             if (board.all_occupied & CASTLING_WQ_MASK) == 0 {
                 list.push(Move::new(Square::E1, Square::C1, MOVE_FLAG_WQ_CASTLE));
             }
         }
     } else { // Black
         // Kingside (OO)
-        if (board.castling_rights & CASTLING_BK) != 0 {
+        if (board.castling_rights & CASTLING_BK_FLAG) != 0 {
             if (board.all_occupied & CASTLING_BK_MASK) == 0 {
                 list.push(Move::new(Square::E8, Square::G8, MOVE_FLAG_BK_CASTLE));
             }
         }
         // Queenside (OOO)
-        if (board.castling_rights & CASTLING_BQ) != 0 {
+        if (board.castling_rights & CASTLING_BQ_FLAG) != 0 {
             if (board.all_occupied & CASTLING_BQ_MASK) == 0 {
                 list.push(Move::new(Square::E8, Square::C8, MOVE_FLAG_BQ_CASTLE));
             }
