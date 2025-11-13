@@ -1,5 +1,6 @@
 use std::mem;
 use crate::board::{Board, Color, PieceType, CASTLING_BK_FLAG, CASTLING_BQ_FLAG, CASTLING_WK_FLAG, CASTLING_WQ_FLAG};
+use crate::r#move::{Move, MOVE_FLAG_BK_CASTLE, MOVE_FLAG_BQ_CASTLE, MOVE_FLAG_PROMO_B, MOVE_FLAG_PROMO_B_CAP, MOVE_FLAG_PROMO_N, MOVE_FLAG_PROMO_N_CAP, MOVE_FLAG_PROMO_Q, MOVE_FLAG_PROMO_Q_CAP, MOVE_FLAG_PROMO_R, MOVE_FLAG_PROMO_R_CAP, MOVE_FLAG_WK_CASTLE, MOVE_FLAG_WQ_CASTLE, MOVE_FROM_MASK, MOVE_TO_MASK};
 use crate::square::Square;
 
 impl Board {
@@ -233,5 +234,51 @@ impl Board {
         fen.push_str(&self.fullmove_number.to_string());
 
         fen
+    }
+}
+
+
+impl Move {
+    /// Converts a square index (0-63) to algebraic notation (e.g., 0 -> "a1", 63 -> "h8").
+    fn square_val_to_alg(val: u16) -> String {
+        let file = (b'a' + (val % 8) as u8) as char;
+        let rank = (b'1' + (val / 8) as u8) as char;
+        format!("{}{}", file, rank)
+    }
+
+    /// Converts the move to coordinate notation (e.g., "e2e4", "e7e8q", "e1g1").
+    pub fn to_algebraic(&self) -> String {
+        let flags = self.get_flags();
+
+        // Handle castling first. In this new format, the "to" square is
+        // the *king's* destination square (g1/c1 or g8/c8).
+        // Your old implementation reading the file is still fine.
+        if (flags == MOVE_FLAG_WK_CASTLE) || (flags == MOVE_FLAG_BK_CASTLE) {
+            return "O-O".to_string();
+        }
+        if (flags == MOVE_FLAG_WQ_CASTLE) || (flags == MOVE_FLAG_BQ_CASTLE) {
+            return "O-O-O".to_string();
+        }
+
+        let from_val = self.0 & MOVE_FROM_MASK;
+        let to_val = (self.0 & MOVE_TO_MASK) >> 6;
+
+        let from_str = Self::square_val_to_alg(from_val);
+        let to_str = Self::square_val_to_alg(to_val);
+
+        // Check if it's any promotion type (1xxx)
+        if (flags & 0b1000_0000_0000_0000) != 0 {
+            let promo_char = match flags {
+                MOVE_FLAG_PROMO_N | MOVE_FLAG_PROMO_N_CAP => 'n',
+                MOVE_FLAG_PROMO_B | MOVE_FLAG_PROMO_B_CAP => 'b',
+                MOVE_FLAG_PROMO_R | MOVE_FLAG_PROMO_R_CAP => 'r',
+                MOVE_FLAG_PROMO_Q | MOVE_FLAG_PROMO_Q_CAP => 'q',
+                _ => '?', // Should not happen
+            };
+            format!("{}{}{}", from_str, to_str, promo_char)
+        } else {
+            // This covers Quiet, DoublePawn, Capture, EnPassant
+            format!("{}{}", from_str, to_str)
+        }
     }
 }

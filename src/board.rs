@@ -202,9 +202,7 @@ impl Board {
                 self.rm_piece(to + (self.side_to_move as i8 * 16 - 8), !self.side_to_move);
                 opt_captured_piece = Some(PieceType::Pawn);
             }
-            _ => {
-                panic!("unable to make_move: invalid flags: {}", flags);
-            }
+            _ => { panic!("unable to make_move: invalid flags: {}", flags); }
         }
 
         // 5. Update the castling rights
@@ -245,5 +243,70 @@ impl Board {
             old_castling_rights,
             old_halfmove_clock,
         )
+    }
+
+    pub fn undo_move(&mut self, undo_info: UndoMove) {
+        // 1. Restore all simple state from the UndoMove object
+        self.castling_rights = undo_info.old_castling_rights;
+        self.en_passant_target = undo_info.old_en_passant_square;
+        self.halfmove_clock = undo_info.old_halfmove_clock;
+
+        // 2. Flip side_to_move *before* doing piece ops.
+        self.side_to_move = !self.side_to_move;
+
+        // 3. Decrement fullmove number if it was Black's turn (which is now self.side_to_move)
+        self.fullmove_number -= self.side_to_move as u16;
+
+        // 4. Extract move data
+        let mv = undo_info.mv;
+        let from = mv.get_from();
+        let to = mv.get_to();
+        let flags = mv.get_flags();
+
+        // 5. Reverse the piece movements based on the flag
+        match flags {
+            MOVE_FLAG_QUIET => {
+                self.move_piece(to, from, self.side_to_move);
+            }
+            MOVE_FLAG_CAPTURE => {
+                self.move_piece(to, from, self.side_to_move);
+                self.put_piece(to, !self.side_to_move, undo_info.captured_piece.unwrap());
+            }
+            MOVE_FLAG_DOUBLE_PAWN => {
+                self.move_piece(to, from, self.side_to_move);
+            }
+            MOVE_FLAG_PROMO_Q | MOVE_FLAG_PROMO_N | MOVE_FLAG_PROMO_B | MOVE_FLAG_PROMO_R => {
+                self.rm_piece(to, self.side_to_move);
+                self.put_piece(from, self.side_to_move, PieceType::Pawn);
+            }
+            MOVE_FLAG_PROMO_Q_CAP | MOVE_FLAG_PROMO_N_CAP | MOVE_FLAG_PROMO_B_CAP | MOVE_FLAG_PROMO_R_CAP => {
+                self.rm_piece(to, self.side_to_move);
+                self.put_piece(from, self.side_to_move, PieceType::Pawn);
+                self.put_piece(to, !self.side_to_move, undo_info.captured_piece.unwrap());
+            }
+            MOVE_FLAG_WK_CASTLE => {
+                self.move_piece(Square::G1, Square::E1, self.side_to_move);
+                self.move_piece(Square::F1, Square::H1, self.side_to_move);
+            }
+            MOVE_FLAG_BK_CASTLE => {
+                self.move_piece(Square::G8, Square::E8, self.side_to_move);
+                self.move_piece(Square::F8, Square::H8, self.side_to_move);
+            }
+            MOVE_FLAG_WQ_CASTLE => {
+                self.move_piece(Square::C1, Square::E1, self.side_to_move);
+                self.move_piece(Square::D1, Square::A1, self.side_to_move);
+            }
+            MOVE_FLAG_BQ_CASTLE => {
+                self.move_piece(Square::C8, Square::E8, self.side_to_move);
+                self.move_piece(Square::D8, Square::A8, self.side_to_move);
+            }
+            MOVE_FLAG_EN_PASSANT => {
+                self.move_piece(to, from, self.side_to_move);
+                // Determine where the captured pawn was
+                let captured_pawn_square = to + (self.side_to_move as i8 * 16 - 8);
+                self.put_piece(captured_pawn_square, !self.side_to_move, PieceType::Pawn);
+            }
+            _ => { panic!("unable to unmake_move: invalid flags: {}", flags); }
+        }
     }
 }

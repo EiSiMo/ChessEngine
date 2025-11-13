@@ -105,11 +105,11 @@ impl MoveList {
 }
 
 pub struct UndoMove {
-    mv: Move,
-    captured_piece: Option<PieceType>,
-    old_en_passant_square: Option<Square>,
-    old_castling_rights: u8,
-    old_halfmove_clock: u8,
+    pub mv: Move,
+    pub captured_piece: Option<PieceType>,
+    pub old_en_passant_square: Option<Square>,
+    pub old_castling_rights: u8,
+    pub old_halfmove_clock: u8,
 }
 
 impl UndoMove {
