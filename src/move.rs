@@ -42,7 +42,7 @@ pub const MOVE_FLAG_PROMO_R_CAP: u16 = 0b1101_0000_0000_0000;
 pub const MOVE_FLAG_PROMO_Q_CAP: u16 = 0b1111_0000_0000_0000;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Move(u16);
+pub struct Move(pub(crate) u16);
 
 impl Move {
     pub fn new(from: Square, to: Square, flags: u16) -> Move {
@@ -50,7 +50,6 @@ impl Move {
             ((to as u16) << 6 ) |
             from as u16)
     }
-
 
     #[inline(always)]
     pub fn get_flags(&self) -> u16 {
@@ -64,58 +63,10 @@ impl Move {
 
     #[inline(always)]
     pub fn get_to(&self) -> Square {
-        // --- KORREKTUR HIER ---
-        // Die Klammern um (self.0 & MOVE_TO_MASK) sind entscheidend
         SQUARES[((self.0 & MOVE_TO_MASK) >> 6) as usize]
-    }
-
-
-    /// Converts a square index (0-63) to algebraic notation (e.g., 0 -> "a1", 63 -> "h8").
-    fn square_val_to_alg(val: u16) -> String {
-        let file = (b'a' + (val % 8) as u8) as char;
-        let rank = (b'1' + (val / 8) as u8) as char;
-        format!("{}{}", file, rank)
-    }
-
-    /// Converts the move to coordinate notation (e.g., "e2e4", "e7e8q", "e1g1").
-    pub fn to_algebraic(&self) -> String {
-        let flags = self.get_flags();
-
-        // Handle castling first. In this new format, the "to" square is
-        // the *king's* destination square (g1/c1 or g8/c8).
-        // Your old implementation reading the file is still fine.
-        if (flags == MOVE_FLAG_WK_CASTLE) || (flags == MOVE_FLAG_BK_CASTLE) {
-            return "O-O".to_string();
-        }
-        if (flags == MOVE_FLAG_WQ_CASTLE) || (flags == MOVE_FLAG_BQ_CASTLE) {
-            return "O-O-O".to_string();
-        }
-
-        let from_val = self.0 & MOVE_FROM_MASK;
-        let to_val = (self.0 & MOVE_TO_MASK) >> 6;
-
-        let from_str = Self::square_val_to_alg(from_val);
-        let to_str = Self::square_val_to_alg(to_val);
-
-        // Check if it's any promotion type (1xxx)
-        if (flags & 0b1000_0000_0000_0000) != 0 {
-            let promo_char = match flags {
-                MOVE_FLAG_PROMO_N | MOVE_FLAG_PROMO_N_CAP => 'n',
-                MOVE_FLAG_PROMO_B | MOVE_FLAG_PROMO_B_CAP => 'b',
-                MOVE_FLAG_PROMO_R | MOVE_FLAG_PROMO_R_CAP => 'r',
-                MOVE_FLAG_PROMO_Q | MOVE_FLAG_PROMO_Q_CAP => 'q',
-                _ => '?', // Should not happen
-            };
-            format!("{}{}{}", from_str, to_str, promo_char)
-        } else {
-            // This covers Quiet, DoublePawn, Capture, EnPassant
-            format!("{}{}", from_str, to_str)
-        }
     }
 }
 
-// ... Rest des MoveList-Codes bleibt exakt gleich ...
-// (MoveList, new, push, len, is_empty, iter, impl fmt::Display)
 pub struct MoveList {
     moves: [Move; 256],
     count: usize,
@@ -152,13 +103,6 @@ impl MoveList {
         self.moves[..self.count].iter()
     }
 }
-
-impl fmt::Display for MoveList {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", &self.iter().map(|mv| mv.to_algebraic()).collect::<Vec<String>>().join(" "))
-    }
-}
-
 
 pub struct UndoMove {
     mv: Move,
