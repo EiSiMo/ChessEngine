@@ -58,7 +58,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
 
         // 1.3 Captures
         // 1.3.1 A-Side Capture  (omitted promotion captures)
-        let mut a_side_capture_targets = (friendly_pawns & PAWN_H_SIDE_CAPTURE_MASK_WITHE) << 7 & opponent_occupied;
+        let mut a_side_capture_targets = (friendly_pawns & PAWN_A_SIDE_CAPTURE_MASK_WITHE) << 7 & opponent_occupied;
 
         while a_side_capture_targets > 0 {
             let to = SQUARES[a_side_capture_targets.trailing_zeros() as usize];
@@ -68,7 +68,7 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         }
 
         // 1.3.2 H-Side Capture (omitted promotion captures)
-        let mut h_side_capture_targets = (friendly_pawns & PAWN_A_SIDE_CAPTURE_MASK_WITHE) << 9 & opponent_occupied;
+        let mut h_side_capture_targets = (friendly_pawns & PAWN_H_SIDE_CAPTURE_MASK_WITHE) << 9 & opponent_occupied;
 
         while h_side_capture_targets > 0 {
             let to = SQUARES[h_side_capture_targets.trailing_zeros() as usize];
@@ -124,14 +124,14 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
                 let en_passant_target_bb: u64 = 1_u64 << (en_passant_target_square as u64);
 
                 // 1. Check A-Side capture (<< 7, e.g., D5 -> C6)
-                let attacker_mask_a_side = (en_passant_target_bb >> 7) & PAWN_H_SIDE_CAPTURE_MASK_WITHE; 
+                let attacker_mask_a_side = (en_passant_target_bb >> 7) & PAWN_A_SIDE_CAPTURE_MASK_WITHE;
                 if (attacker_mask_a_side & friendly_pawns) > 0 {
                     let from = en_passant_target_square - 7;
                     list.push(Move::new(from, en_passant_target_square, MOVE_FLAG_EN_PASSANT));
                 }
 
                 // 2. Check H-Side capture (<< 9, e.g., B5 -> C6)
-                let attacker_mask_h_side = (en_passant_target_bb >> 9) & PAWN_A_SIDE_CAPTURE_MASK_WITHE;
+                let attacker_mask_h_side = (en_passant_target_bb >> 9) & PAWN_H_SIDE_CAPTURE_MASK_WITHE;
                 if (attacker_mask_h_side & friendly_pawns) > 0 {
                     let from = en_passant_target_square - 9;
                     list.push(Move::new(from, en_passant_target_square, MOVE_FLAG_EN_PASSANT));
