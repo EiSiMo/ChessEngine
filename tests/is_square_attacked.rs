@@ -22,6 +22,31 @@ fn test_is_attacked_kiwipete() {
     assert_square_attacked(&mut board, Square::D3, true, true);
     assert_square_attacked(&mut board, Square::E3, true, false);
     assert_square_attacked(&mut board, Square::G3, true, false);
-    
-    // TODO keep going with the rest
+
+    assert_square_attacked(&mut board, Square::A4, true, true);
+    assert_square_attacked(&mut board, Square::C4, true, true);
+    assert_square_attacked(&mut board, Square::D4, false, false);
+    assert_square_attacked(&mut board, Square::F4, true, false);
+    assert_square_attacked(&mut board, Square::G4, true, true);
+    assert_square_attacked(&mut board, Square::H4, false, true);
+
+    assert_square_attacked(&mut board, Square::A5, false, false);
+    assert_square_attacked(&mut board, Square::B5, true, true);
+    assert_square_attacked(&mut board, Square::C5, false, true);
+    assert_square_attacked(&mut board, Square::F5, true, true);
+    assert_square_attacked(&mut board, Square::G5, true, false);
+    assert_square_attacked(&mut board, Square::H5, true, true);
+
+    assert_square_attacked(&mut board, Square::C6, true, true);
+    assert_square_attacked(&mut board, Square::D6, false, true);
+    assert_square_attacked(&mut board, Square::H6, true, true);
+
+    assert_square_attacked(&mut board, Square::B7, false, true);
+    assert_square_attacked(&mut board, Square::H7, false, true);
+
+    assert_square_attacked(&mut board, Square::B8, false, true);
+    assert_square_attacked(&mut board, Square::C8, false, true);
+    assert_square_attacked(&mut board, Square::D8, false, true);
+    assert_square_attacked(&mut board, Square::F8, false, true);
+    assert_square_attacked(&mut board, Square::G8, false, true);
 }
