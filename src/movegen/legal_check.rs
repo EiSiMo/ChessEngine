@@ -1,3 +1,4 @@
+// FILENAME: legal_check.rs
 use crate::board::{Board, Color, PieceType};
 use crate::movegen::tables::{get_bishop_attacks, get_rook_attacks, ATTACKING_PAWNS, KING_ATTACKS, KNIGHT_ATTACKS, MAGICS_BISHOP, MAGICS_ROOK, PREMASKS_BISHOP, PREMASKS_ROOK, RELEVANT_BITS_BISHOP, RELEVANT_BITS_ROOK};
 use crate::square::{Square, SQUARES};
@@ -33,6 +34,7 @@ pub fn is_square_attacked(board: &Board, square: Square, color: Color) -> bool {
 
     // 2. Sliding
     let blockers = board.all_occupied;
+    let queens = board.pieces[PieceType::Queen as usize][color as usize];
 
     // 2.1 Bishop (and part of Queen)
     let premask_bishop = PREMASKS_BISHOP[square as usize];
@@ -43,8 +45,8 @@ pub fn is_square_attacked(board: &Board, square: Square, color: Color) -> bool {
     let magic_index_bishop = ((blockers & premask_bishop).wrapping_mul(magic_bishop)) >> shift_bishop;
     let bishop_attackable_squares = attack_table_bishop[square as usize][magic_index_bishop as usize];
 
-    let bishops = board.pieces[PieceType::Bishop as usize][color as usize];
-    if (bishop_attackable_squares & bishops) != 0 {
+    let bishops_and_queens = board.pieces[PieceType::Bishop as usize][color as usize] | queens;
+    if (bishop_attackable_squares & bishops_and_queens) != 0 {
         return true;
     }
 
@@ -57,15 +59,8 @@ pub fn is_square_attacked(board: &Board, square: Square, color: Color) -> bool {
     let magic_index_rook = ((blockers & premask_rook).wrapping_mul(magic_rook)) >> shift_rook;
     let rook_attackable_squares = attack_table_rook[square as usize][magic_index_rook as usize];
 
-    let rooks = board.pieces[PieceType::Rook as usize][color as usize];
-    if (rook_attackable_squares & rooks) != 0 {
-        return true;
-    }
-
-    // 2.3 Queens
-    let queen_attackable_squares = bishop_attackable_squares | rook_attackable_squares;
-    let queens = board.pieces[PieceType::Queen as usize][color as usize];
-    if (queen_attackable_squares & queens) != 0 {
+    let rooks_and_queens = board.pieces[PieceType::Rook as usize][color as usize] | queens;
+    if (rook_attackable_squares & rooks_and_queens) != 0 {
         return true;
     }
 

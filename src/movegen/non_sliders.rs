@@ -1,3 +1,4 @@
+// FILENAME: non_sliders.rs
 use crate::board::*;
 use crate::movegen::legal_check::is_square_attacked;
 use crate::r#move::*;
@@ -68,9 +69,8 @@ pub fn generate_king_moves(board: &Board, list: &mut MoveList) {
         // Kingside (OO)
         if (board.castling_rights & CASTLING_WK_FLAG) != 0 {
             if (board.all_occupied & CASTLING_WK_MASK) == 0 {
-                // Check F1 (path) and G1 (landing)
-                if !is_square_attacked(board, Square::F1, Color::Black) &&
-                    !is_square_attacked(board, Square::G1, Color::Black) {
+                // Check F1 (path). G1 (landing) is checked by perft function.
+                if !is_square_attacked(board, Square::F1, Color::Black) {
                     list.push(Move::new(Square::E1, Square::G1, MOVE_FLAG_WK_CASTLE));
                 }
             }
@@ -78,9 +78,8 @@ pub fn generate_king_moves(board: &Board, list: &mut MoveList) {
         // Queenside (OOO)
         if (board.castling_rights & CASTLING_WQ_FLAG) != 0 {
             if (board.all_occupied & CASTLING_WQ_MASK) == 0 {
-                // Check D1 (path) and C1 (landing). B1 is irrelevant.
-                if !is_square_attacked(board, Square::D1, Color::Black) &&
-                    !is_square_attacked(board, Square::C1, Color::Black) {
+                // Check D1 (path). C1 (landing) is checked by perft function. B1 is irrelevant.
+                if !is_square_attacked(board, Square::D1, Color::Black) {
                     list.push(Move::new(Square::E1, Square::C1, MOVE_FLAG_WQ_CASTLE));
                 }
             }
@@ -94,9 +93,8 @@ pub fn generate_king_moves(board: &Board, list: &mut MoveList) {
         // Kingside (OO)
         if (board.castling_rights & CASTLING_BK_FLAG) != 0 {
             if (board.all_occupied & CASTLING_BK_MASK) == 0 {
-                // Check F8 (path) and G8 (landing)
-                if !is_square_attacked(board, Square::F8, Color::White) &&
-                    !is_square_attacked(board, Square::G8, Color::White) {
+                // Check F8 (path). G8 (landing) is checked by perft function.
+                if !is_square_attacked(board, Square::F8, Color::White) {
                     list.push(Move::new(Square::E8, Square::G8, MOVE_FLAG_BK_CASTLE));
                 }
             }
@@ -104,9 +102,8 @@ pub fn generate_king_moves(board: &Board, list: &mut MoveList) {
         // Queenside (OOO)
         if (board.castling_rights & CASTLING_BQ_FLAG) != 0 {
             if (board.all_occupied & CASTLING_BQ_MASK) == 0 {
-                // Check D8 (path) and C8 (landing). B8 is irrelevant.
-                if !is_square_attacked(board, Square::D8, Color::White) &&
-                    !is_square_attacked(board, Square::C8, Color::White) {
+                // Check D8 (path). C8 (landing) is checked by perft function. B8 is irrelevant.
+                if !is_square_attacked(board, Square::D8, Color::White) {
                     list.push(Move::new(Square::E8, Square::C8, MOVE_FLAG_BQ_CASTLE));
                 }
             }
