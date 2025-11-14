@@ -1,5 +1,5 @@
 use crate::board::{Board, Color, PieceType};
-use crate::r#move::MoveList;
+use crate::r#move::{MoveList, Move};
 use crate::square::Square;
 use std::fmt;
 
@@ -211,5 +211,11 @@ impl fmt::Display for Square {
         let file = files[square_index % 8];
         let rank = ranks[square_index / 8];
         write!(f, "{}{}", file, rank)
+    }
+}
+
+impl fmt::Display for Move {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_algebraic())
     }
 }

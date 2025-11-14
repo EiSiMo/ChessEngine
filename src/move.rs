@@ -80,7 +80,6 @@ impl MoveList {
         }
     }
 
-    #[inline(always)]
     pub fn push(&mut self, mv: Move) {
         debug_assert!(self.count < 256, "Move list overflow!");
 
@@ -88,19 +87,20 @@ impl MoveList {
         self.count += 1;
     }
 
-    #[inline(always)]
     pub fn len(&self) -> usize {
         self.count
     }
 
-    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.count == 0
     }
 
-    #[inline(always)]
     pub fn iter(&self) -> slice::Iter<'_, Move> {
         self.moves[..self.count].iter()
+    }
+
+    pub fn contains(&self, mv: &Move) -> bool {
+        self.moves.contains(mv)
     }
 }
 
