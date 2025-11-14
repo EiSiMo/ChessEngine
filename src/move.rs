@@ -1,4 +1,5 @@
 use std::slice;
+use std::ops::{Index, IndexMut};
 use crate::square::Square;
 use crate::board::PieceType;
 use crate::square::SQUARES;
@@ -100,6 +101,22 @@ impl MoveList {
 
     pub fn contains(&self, mv: &Move) -> bool {
         self.moves.contains(mv)
+    }
+}
+
+impl Index<usize> for MoveList {
+    type Output = Move;
+
+    #[inline(always)]
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.moves[..self.count][index]
+    }
+}
+
+impl IndexMut<usize> for MoveList {
+    #[inline(always)]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.moves[..self.count][index]
     }
 }
 
