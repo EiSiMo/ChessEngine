@@ -28,8 +28,8 @@ fn count_legal_moves_recursive(board: &mut Board, depth: u8) -> u64 {
 
 #[test]
 fn perft() {
-    let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    println!("{}", count_legal_moves_recursive(&mut board, 4));
+    let mut board = Board::from_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+    println!("{}", count_legal_moves_recursive(&mut board, 1));
 }
 
 

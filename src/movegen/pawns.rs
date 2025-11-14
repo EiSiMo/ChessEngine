@@ -106,7 +106,6 @@ pub fn generate_pawn_moves(board: &Board, list: &mut MoveList) {
         }
 
         // 1.4.2.2 H-side capturing promotion
-        // CORRECTED: Use PAWN_H_SIDE_CAPTURE_PROMOTION_MASK_WITHE (excludes H-file)
         let mut promotion_targets_h_side_capture = ((friendly_pawns & PAWN_H_SIDE_CAPTURE_PROMOTION_MASK_WITHE) << 9) & board.occupied[1];
         while promotion_targets_h_side_capture > 0 {
             let to = SQUARES[promotion_targets_h_side_capture.trailing_zeros() as usize];

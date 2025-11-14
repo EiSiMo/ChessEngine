@@ -1,5 +1,4 @@
 use std::slice;
-use std::fmt;
 use crate::square::Square;
 use crate::board::PieceType;
 use crate::square::SQUARES;
