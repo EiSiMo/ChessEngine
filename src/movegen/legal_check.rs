@@ -4,7 +4,7 @@ use crate::movegen::tables::{get_bishop_attacks, get_rook_attacks, ATTACKING_PAW
 use crate::square::{Square, SQUARES};
 
 /// Checks if the king of the side that is NOT to move is in check
-pub fn is_king_attacked(board: &Board) -> bool {
+pub fn is_other_king_attacked(board: &Board) -> bool {
     let king = board.pieces[PieceType::King as usize][!board.side_to_move as usize];
     is_square_attacked(board, SQUARES[king.trailing_zeros() as usize], board.side_to_move)
 }

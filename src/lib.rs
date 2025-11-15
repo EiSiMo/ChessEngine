@@ -6,3 +6,4 @@ pub mod eval;
 pub mod display;
 pub mod parsing;
 pub mod search;
+pub mod engine;

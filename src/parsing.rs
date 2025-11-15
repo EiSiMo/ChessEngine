@@ -250,16 +250,6 @@ impl Move {
     pub fn to_algebraic(&self) -> String {
         let flags = self.get_flags();
 
-        // Handle castling first. In this new format, the "to" square is
-        // the *king's* destination square (g1/c1 or g8/c8).
-        // Your old implementation reading the file is still fine.
-        if (flags == MOVE_FLAG_WK_CASTLE) || (flags == MOVE_FLAG_BK_CASTLE) {
-            return "O-O".to_string();
-        }
-        if (flags == MOVE_FLAG_WQ_CASTLE) || (flags == MOVE_FLAG_BQ_CASTLE) {
-            return "O-O-O".to_string();
-        }
-
         let from_val = self.0 & MOVE_FROM_MASK;
         let to_val = (self.0 & MOVE_TO_MASK) >> 6;
 
@@ -281,4 +271,7 @@ impl Move {
             format!("{}{}", from_str, to_str)
         }
     }
+
+    // TODO
+    // pub fn from_algebraic(s: &str, board: &Board) -> Move {}
 }

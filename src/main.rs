@@ -1,16 +1,52 @@
-use chess_engine::board::Board;
-use chess_engine::movegen::generate_pseudo_legal_moves;
-use chess_engine::movegen::legal_check::is_king_attacked;
-use chess_engine::r#move::*;
-use chess_engine::search::minimax;
-use chess_engine::search::minimax::minimax;
+use std::io::{self, BufRead};
+use chess_engine::engine::Engine;
 
 fn main() {
-    let mut board = Board::from_fen("rnb1kbnr/pppppppp/8/8/8/4q3/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    let (opt_move, _) = minimax(&mut board, 5);
-    if let Some(mv) = opt_move {
-        println!("Found best move: {}", mv)
-    } else {
-        println!("No moves found")
+    // Create a new engine instance
+    let mut engine = Engine::new("Yakari".to_string(), "EiSiMo".to_string());
+
+    loop {
+        // Start the main UCI loop
+        for line in io::stdin().lock().lines() {
+            let input = line.unwrap_or_else(|_| "quit".to_string());
+            let tokens: Vec<&str> = input.split_whitespace().collect();
+
+            if tokens.is_empty() {
+                continue;
+            }
+
+            match tokens[0] {
+                "uci" => {
+                    println!("id name {}", engine.name);
+                    println!("id author {}", engine.author);
+                    println!("uciok");
+                }
+                "isready" => {
+                    println!("readyok");
+                }
+                "position" => {
+                    // Example: "position startpos moves e2e4 e7e5"
+                    // Or: "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+                    // You'll need to write a parser for this!
+                    // For now, let's just handle the "fen" part simply.
+                    if tokens.len() > 1 && tokens[1] == "fen" {
+                        let fen = tokens[2..].join(" ");
+                        engine.setpos(&fen);
+                    }
+                }
+                "go" => {
+                    // Example: "go depth 6"
+                    // For now, we'll just use the fixed depth from your search function.
+                    engine.search(5);
+                }
+                "quit" => {
+                    break; // Exit the loop and the program
+                }
+                _ => {
+                    // Unknown command, just ignore
+                }
+            }
+        }
     }
+
 }

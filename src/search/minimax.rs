@@ -1,7 +1,7 @@
 use crate::board::{Board, Color}; // <-- Assuming you have a Color enum (e.g., Color::White, Color::Black)
 use crate::eval::basic::evaluate_board;
 use crate::movegen::generate_pseudo_legal_moves;
-use crate::movegen::legal_check::is_king_attacked;
+use crate::movegen::legal_check::is_other_king_attacked;
 use crate::r#move::{Move, MoveList};
 
 
@@ -26,7 +26,7 @@ pub fn minimax(board: &mut Board, depth: u8) -> (Option<Move>, i32) {
 
     for mv in list.iter() {
         let undo_mv = board.make_move(*mv);
-        let is_illegal = is_king_attacked(board);
+        let is_illegal = is_other_king_attacked(board);
         if is_illegal {
             board.undo_move(undo_mv);
             continue;
@@ -44,7 +44,7 @@ pub fn minimax(board: &mut Board, depth: u8) -> (Option<Move>, i32) {
     }
 
     if !legal_moves_found {
-        if is_king_attacked(board) {
+        if is_other_king_attacked(board) {
             return (None, -i32::MAX);
         } else {
             return (None, 0);
