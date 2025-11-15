@@ -4,6 +4,8 @@ use crate::movegen::generate_pseudo_legal_moves;
 use crate::movegen::legal_check::is_other_king_attacked;
 use crate::r#move::{Move, MoveList};
 
+// A score high enough to be > any material eval, but low enough to not overflow when adding ply
+const MATE_SCORE: i32 = 1_000_000;
 
 fn evaluate_board_relative(board: &Board) -> i32 {
     let static_eval = evaluate_board(board);
@@ -13,7 +15,7 @@ fn evaluate_board_relative(board: &Board) -> i32 {
     }
 }
 
-pub fn minimax(board: &mut Board, depth: u8) -> (Option<Move>, i32) {
+pub fn minimax(board: &mut Board, depth: u8, ply: u8) -> (Option<Move>, i32) {
     if depth == 0 {
         return (None, evaluate_board_relative(board));
     }
@@ -21,7 +23,7 @@ pub fn minimax(board: &mut Board, depth: u8) -> (Option<Move>, i32) {
     let mut list = MoveList::new();
     generate_pseudo_legal_moves(board, &mut list);
     let mut best_move: Option<Move> = None;
-    let mut best_score: i32 = -i32::MAX;
+    let mut best_score: i32 = -i32::MAX; // Start with the worst possible score
     let mut legal_moves_found = false;
 
     for mv in list.iter() {
@@ -32,7 +34,9 @@ pub fn minimax(board: &mut Board, depth: u8) -> (Option<Move>, i32) {
             continue;
         }
         legal_moves_found = true;
-        let (_, score) = minimax(board, depth - 1);
+
+        // Recursive call, incrementing ply
+        let (_, score) = minimax(board, depth - 1, ply + 1);
         let current_score = -score;
 
         if current_score > best_score {
@@ -45,8 +49,12 @@ pub fn minimax(board: &mut Board, depth: u8) -> (Option<Move>, i32) {
 
     if !legal_moves_found {
         if is_other_king_attacked(board) {
-            return (None, -i32::MAX);
+            // Checkmate
+            // The score is *less* negative the *longer* it takes to be mated (higher ply)
+            // This translates to a *higher* score for the winner for a *faster* mate
+            return (None, -MATE_SCORE + (ply as i32));
         } else {
+            // Stalemate
             return (None, 0);
         }
     }

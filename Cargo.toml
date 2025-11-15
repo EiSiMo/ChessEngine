@@ -5,3 +5,14 @@ authors = ["Moritz Eigenauer <moritz.eigenauer@gmail.com>"]
 edition = "2024"
 
 [dependencies]
+
+[dev-dependencies]
+criterion = "0.7.0"
+
+[[bench]]
+name = "perft"
+harness = false
+
+[[bench]]
+name = "eval"
+harness = false

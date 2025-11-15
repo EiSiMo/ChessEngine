@@ -27,8 +27,7 @@ fn count_legal_moves_recursive(board: &mut Board, depth: u8) -> u64 {
 }
 
 #[test]
-fn perft() {
-    // TalkChess PERFT Tests (by Martin Sedlak)
+fn test_perft() {
     // Illegal ep move #1
     let mut board = Board::from_fen("3k4/3p4/8/K1P4r/8/8/8/8 b - - 0 1");
     assert_eq!(count_legal_moves_recursive(&mut board, 6), 1134888, "Illegal ep move #1");

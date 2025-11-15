@@ -32,14 +32,9 @@ pub fn uci_mainloop(engine: &mut Engine) {
                             let fen = tokens[2..].join(" ");
                             engine.setpos_fen(&fen);
                         } else if tokens[1] == "startpos" {
-                            // Check explicitly for the "moves" keyword
                             if tokens.len() > 2 && tokens[2] == "moves" {
-                                // Command: "position startpos moves e2e4 e7e5 ..."
-                                // Pass only the tokens *after* "moves"
                                 engine.setpos_startpos(&tokens[3..]);
                             } else {
-                                // Command: "position startpos"
-                                // Pass an empty slice
                                 engine.setpos_startpos(&[]);
                             }
                         }
@@ -47,7 +42,7 @@ pub fn uci_mainloop(engine: &mut Engine) {
                 }
                 "go" => {
                     // TODO add a lot functionality
-                    engine.search(5);
+                    println!("{}", engine.search(6));
                 }
                 "stop" => {
                     // TODO stop search as soon as possible

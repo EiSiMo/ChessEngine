@@ -32,14 +32,14 @@ impl Engine {
         }
     }
 
-    pub fn search(&mut self, depth: u8) {
-        let (opt_move, _score) = minimax(&mut self.board, depth);
+    pub fn search(&mut self, depth: u8) -> String {
+        let (opt_move, _score) = minimax(&mut self.board, depth, 0);
 
         if let Some(mv) = opt_move {
-            println!("bestmove {}", mv);
+            mv.to_algebraic()
         } else {
             // UCI format for no legal moves (checkmate/stalemate)
-            println!("bestmove null");
+            "null".to_string()
         }
     }
 }

@@ -1,7 +1,4 @@
 /target
 /.idea
-/src/replace.py
-/scripts
 /Cargo.lock
-/src/benchmark/stockfish
-uci_log.txt
+progress_tracking/progress.xlsx
