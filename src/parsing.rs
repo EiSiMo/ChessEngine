@@ -1,6 +1,6 @@
 use std::mem;
-use crate::board::{Board, Color, PieceType, CASTLING_BK_FLAG, CASTLING_BQ_FLAG, CASTLING_WK_FLAG, CASTLING_WQ_FLAG};
-use crate::r#move::{Move, MOVE_FLAG_BK_CASTLE, MOVE_FLAG_BQ_CASTLE, MOVE_FLAG_PROMO_B, MOVE_FLAG_PROMO_B_CAP, MOVE_FLAG_PROMO_N, MOVE_FLAG_PROMO_N_CAP, MOVE_FLAG_PROMO_Q, MOVE_FLAG_PROMO_Q_CAP, MOVE_FLAG_PROMO_R, MOVE_FLAG_PROMO_R_CAP, MOVE_FLAG_WK_CASTLE, MOVE_FLAG_WQ_CASTLE, MOVE_FROM_MASK, MOVE_TO_MASK};
+use crate::board::*;
+use crate::r#move::*;
 use crate::square::Square;
 
 impl Board {
@@ -35,27 +35,27 @@ impl Board {
                     match c {
                         'P' => {
                             pieces[PieceType::Pawn as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Pawn); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Pawn);
                         }
                         'N' => {
                             pieces[PieceType::Knight as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Knight); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Knight);
                         }
                         'B' => {
                             pieces[PieceType::Bishop as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Bishop); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Bishop);
                         }
                         'R' => {
                             pieces[PieceType::Rook as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Rook); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Rook);
                         }
                         'Q' => {
                             pieces[PieceType::Queen as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Queen); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Queen);
                         }
                         'K' => {
                             pieces[PieceType::King as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::King); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::King);
                         }
                         _ => {}
                     }
@@ -237,13 +237,22 @@ impl Board {
     }
 }
 
-
 impl Move {
     /// Converts a square index (0-63) to algebraic notation (e.g., 0 -> "a1", 63 -> "h8").
     fn square_val_to_alg(val: u16) -> String {
         let file = (b'a' + (val % 8) as u8) as char;
         let rank = (b'1' + (val / 8) as u8) as char;
         format!("{}{}", file, rank)
+    }
+
+    /// Converts algebraic notation (e.g., "a1") to a Square.
+    /// Assumes valid input.
+    fn alg_to_square(alg: &str) -> Square {
+        let file = (alg.as_bytes()[0] - b'a') as u8;
+        let rank = (alg.as_bytes()[1] - b'1') as u8;
+        let sq_index = rank * 8 + file;
+        // This is unsafe, but we assume valid algebraic notation
+        unsafe { mem::transmute::<u8, Square>(sq_index) }
     }
 
     /// Converts the move to coordinate notation (e.g., "e2e4", "e7e8q", "e1g1").
@@ -267,11 +276,77 @@ impl Move {
             };
             format!("{}{}{}", from_str, to_str, promo_char)
         } else {
-            // This covers Quiet, DoublePawn, Capture, EnPassant
+            // This covers Quiet, DoublePawn, Capture, EnPassant, Castles
             format!("{}{}", from_str, to_str)
         }
     }
 
-    // TODO
-    // pub fn from_algebraic(s: &str, board: &Board) -> Move {}
+    /// Creates a Move from algebraic notation (e.g., "e2e4") and a board state.
+    /// Assumes the move is valid and legal for the given board state.
+    pub fn from_algebraic(s: &str, board: &Board) -> Move {
+        let from_sq = Self::alg_to_square(&s[0..2]);
+        let to_sq = Self::alg_to_square(&s[2..4]);
+
+        let moving_piece = board.pieces_on_squares[from_sq as usize]
+            .expect("Invalid move: No piece on 'from' square.");
+
+        let is_capture = board.pieces_on_squares[to_sq as usize].is_some();
+
+        // 1. Handle Promotions
+        if s.len() == 5 {
+            let promo_char = s.chars().nth(4).unwrap();
+            match (promo_char, is_capture) {
+                ('q', false) => return Move::new(from_sq, to_sq, MOVE_FLAG_PROMO_Q),
+                ('n', false) => return Move::new(from_sq, to_sq, MOVE_FLAG_PROMO_N),
+                ('r', false) => return Move::new(from_sq, to_sq, MOVE_FLAG_PROMO_R),
+                ('b', false) => return Move::new(from_sq, to_sq, MOVE_FLAG_PROMO_B),
+                ('q', true)  => return Move::new(from_sq, to_sq, MOVE_FLAG_PROMO_Q_CAP),
+                ('n', true)  => return Move::new(from_sq, to_sq, MOVE_FLAG_PROMO_N_CAP),
+                ('r', true)  => return Move::new(from_sq, to_sq, MOVE_FLAG_PROMO_R_CAP),
+                ('b', true)  => return Move::new(from_sq, to_sq, MOVE_FLAG_PROMO_B_CAP),
+                _ => panic!("Invalid promotion character"),
+            }
+        }
+
+        // 2. Handle Castling
+        if moving_piece == PieceType::King {
+            let from_idx = from_sq as u8;
+            let to_idx = to_sq as u8;
+
+            // White King Side: e1g1 (idx 4 -> 6)
+            if from_idx == 4 && to_idx == 6 { return Move::new(from_sq, to_sq, MOVE_FLAG_WK_CASTLE); }
+            // White Queen Side: e1c1 (idx 4 -> 2)
+            if from_idx == 4 && to_idx == 2 { return Move::new(from_sq, to_sq, MOVE_FLAG_WQ_CASTLE); }
+            // Black King Side: e8g8 (idx 60 -> 62)
+            if from_idx == 60 && to_idx == 62 { return Move::new(from_sq, to_sq, MOVE_FLAG_BK_CASTLE); }
+            // Black Queen Side: e8c8 (idx 60 -> 58)
+            if from_idx == 60 && to_idx == 58 { return Move::new(from_sq, to_sq, MOVE_FLAG_BQ_CASTLE); }
+        }
+
+        // 3. Handle Pawn Special Moves
+        if moving_piece == PieceType::Pawn {
+            // Double Pawn Push
+            let rank_diff = (to_sq as i8 - from_sq as i8).abs();
+            if rank_diff == 16 {
+                return Move::new(from_sq, to_sq, MOVE_FLAG_DOUBLE_PAWN);
+            }
+
+            // En Passant
+            // Must be diagonal move, to the en_passant_target square, and not a normal capture
+            if Some(to_sq) == board.en_passant_target && !is_capture {
+                let from_file = from_sq as u8 % 8;
+                let to_file = to_sq as u8 % 8;
+                if from_file != to_file {
+                    return Move::new(from_sq, to_sq, MOVE_FLAG_EN_PASSANT);
+                }
+            }
+        }
+
+        // 4. Handle Normal Captures / Quiet Moves
+        if is_capture {
+            Move::new(from_sq, to_sq, MOVE_FLAG_CAPTURE)
+        } else {
+            Move::new(from_sq, to_sq, MOVE_FLAG_QUIET)
+        }
+    }
 }

@@ -1,5 +1,6 @@
 // ... (your use statements)
 use crate::board::Board;
+use crate::r#move::Move;
 use crate::search::minimax::minimax;
 
 pub struct Engine {
@@ -19,8 +20,16 @@ impl Engine {
         }
     }
 
-    pub fn setpos(&mut self, fen: &str) {
+    pub fn setpos_fen(&mut self, fen: &str) {
         self.board = Board::from_fen(fen);
+    }
+
+    pub fn setpos_startpos(&mut self, moves: &[&str]) {
+        self.board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        for mv_str in moves {
+            let mv = Move::from_algebraic(mv_str, &self.board);
+            self.board.make_move(mv);
+        }
     }
 
     pub fn search(&mut self, depth: u8) {
