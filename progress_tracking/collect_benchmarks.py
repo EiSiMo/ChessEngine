@@ -151,7 +151,8 @@ def main():
 
         last_row_commit_val = ws.cell(row=ws.max_row, column=commit_col_index).value
 
-        if last_row_commit_val == "local":
+        # FIXED: Check if the value is a string and strip whitespace before comparing
+        if isinstance(last_row_commit_val, str) and last_row_commit_val.strip() == "local":
             ws.delete_rows(ws.max_row)
             print("Overwriting previous 'local' entry.")
 
