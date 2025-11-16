@@ -42,7 +42,7 @@ pub fn uci_mainloop(engine: &mut Engine) {
                 }
                 "go" => {
                     // TODO add a lot functionality
-                    println!("{}", engine.search(6));
+                    println!("bestmove {}", engine.search(6));
                 }
                 "stop" => {
                     // TODO stop search as soon as possible
