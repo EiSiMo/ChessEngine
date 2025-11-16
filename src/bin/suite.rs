@@ -40,7 +40,7 @@ fn main() {
         // Record start time
         let start_time = Instant::now();
 
-        let result = engine.search(4);
+        let result = engine.search(5);
 
         // Calculate duration
         let duration = start_time.elapsed();
@@ -57,6 +57,8 @@ fn main() {
         if result == *bm {
             correct_tests += 1.0;
         }
+
+        println!("{}%", (total_tests / (sts.len() as f32 / 100.0)) as u8);
     }
 
     println!("{}", correct_tests / (total_tests / 100.0));

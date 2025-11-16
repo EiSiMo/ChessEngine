@@ -1,0 +1,78 @@
+use crate::board::{Board, Color}; // <-- Assuming you have a Color enum (e.g., Color::White, Color::Black)
+use crate::eval::basic::evaluate_board;
+use crate::movegen::generate_pseudo_legal_moves;
+use crate::movegen::legal_check::is_other_king_attacked;
+use crate::r#move::{Move, MoveList};
+
+// A score high enough to be > any material eval, but low enough to not overflow when adding ply
+const MATE_SCORE: i32 = 1_000_000;
+
+fn evaluate_board_relative(board: &Board) -> i32 {
+    let static_eval = evaluate_board(board);
+    match board.side_to_move {
+        Color::White => static_eval,
+        Color::Black => -static_eval,
+    }
+}
+
+pub fn alpha_beta(
+    board: &mut Board,
+    depth: u8,
+    ply: u8,
+    mut alpha: i32,
+    beta: i32,
+) -> (Option<Move>, i32) {
+    if depth == 0 {
+        return (None, evaluate_board_relative(board));
+    }
+
+    let mut list = MoveList::new();
+    generate_pseudo_legal_moves(board, &mut list);
+    let mut best_move: Option<Move> = None;
+    let mut best_score: i32 = -i32::MAX; // This is our local "worst case"
+    let mut legal_moves_found = false;
+
+    for mv in list.iter() {
+        let undo_mv = board.make_move(*mv);
+        let is_illegal = is_other_king_attacked(board);
+        if is_illegal {
+            board.undo_move(undo_mv);
+            continue;
+        }
+        legal_moves_found = true;
+
+        // Recursive call with negated and swapped alpha/beta
+        let (_, score) = alpha_beta(board, depth - 1, ply + 1, -beta, -alpha);
+        let current_score = -score;
+
+        if current_score > best_score {
+            best_score = current_score;
+            best_move = Some(*mv);
+        }
+
+        board.undo_move(undo_mv);
+
+        // Alpha-Beta Pruning logic
+        if best_score > alpha {
+            alpha = best_score;
+        }
+
+        if alpha >= beta {
+            break; // Beta cutoff (Pruning)
+        }
+    }
+
+    if !legal_moves_found {
+        if is_other_king_attacked(board) {
+            // Checkmate
+            // The score is *less* negative the *longer* it takes to be mated (higher ply)
+            // This translates to a *higher* score for the winner for a *faster* mate
+            return (None, -MATE_SCORE + (ply as i32));
+        } else {
+            // Stalemate
+            return (None, 0);
+        }
+    }
+
+    (best_move, best_score)
+}

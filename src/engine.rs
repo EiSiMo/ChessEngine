@@ -1,7 +1,7 @@
 // ... (your use statements)
 use crate::board::Board;
 use crate::r#move::Move;
-use crate::search::minimax::minimax;
+use crate::search::alpha_beta::alpha_beta;
 
 pub struct Engine {
     pub name: String,
@@ -33,7 +33,7 @@ impl Engine {
     }
 
     pub fn search(&mut self, depth: u8) -> String {
-        let (opt_move, _score) = minimax(&mut self.board, depth, 0);
+        let (opt_move, _score) = alpha_beta(&mut self.board, depth, 0, -i32::MAX, i32::MAX);
 
         if let Some(mv) = opt_move {
             mv.to_algebraic()
