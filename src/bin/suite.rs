@@ -58,7 +58,6 @@ fn main() {
             correct_tests += 1.0;
         }
 
-        println!("{}%", (total_tests / (sts.len() as f32 / 100.0)) as u8);
     }
 
     println!("{}", correct_tests / (total_tests / 100.0));
