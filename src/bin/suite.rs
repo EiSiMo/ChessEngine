@@ -45,7 +45,7 @@ fn main() {
         // Calculate duration
         let duration = start_time.elapsed();
 
-        // Check if the test exceeded the time limit.
+        // Check if the test exceeded the time limit
         if duration > time_limit {
             panic!(
                 "Test exceeded 1 second limit: {:?} for FEN: {}",
