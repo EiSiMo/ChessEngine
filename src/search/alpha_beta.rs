@@ -1,7 +1,7 @@
 use crate::board::{Board, Color}; // <-- Assuming you have a Color enum (e.g., Color::White, Color::Black)
 use crate::eval::basic::evaluate_board;
 use crate::movegen::generate_pseudo_legal_moves;
-use crate::movegen::legal_check::is_other_king_attacked;
+use crate::movegen::legal_check::*;
 use crate::r#move::{Move, MoveList};
 
 // A score high enough to be > any material eval, but low enough to not overflow when adding ply
@@ -63,10 +63,7 @@ pub fn alpha_beta(
     }
 
     if !legal_moves_found {
-        if is_other_king_attacked(board) {
-            // Checkmate
-            // The score is *less* negative the *longer* it takes to be mated (higher ply)
-            // This translates to a *higher* score for the winner for a *faster* mate
+        if is_current_king_attacked(board) {
             return (None, -MATE_SCORE + (ply as i32));
         } else {
             // Stalemate

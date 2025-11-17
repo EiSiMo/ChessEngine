@@ -9,9 +9,9 @@ from openpyxl.utils import get_column_letter
 
 # --- Configuration ---
 # Adjust these paths if your benchmark names are different!
-PERFT_JSON_PATH = "C:/Users/Moritz/RustroverProjects/ChessEngine/target/criterion/standard_perft5/new/estimates.json"
-EVAL_JSON_PATH = "C:/Users/Moritz/RustroverProjects/ChessEngine/target/criterion/standard_board_evaluation/new/estimates.json"
-EXCEL_FILE = "C:/Users/Moritz/RustroverProjects/ChessEngine/progress_tracking/progress.xlsx"
+PERFT_JSON_PATH = "target/criterion/standard_perft5/new/estimates.json"
+EVAL_JSON_PATH = "target/criterion/standard_board_evaluation/new/estimates.json"
+EXCEL_FILE = "progress_tracking/progress.xlsx"
 HEADERS = ["TIMESTAMP", "COMMIT", "MESSAGE", "PERFT (ms)", "EVAL (ps)", "SUITE (%)"]
 
 COLUMN_WIDTHS = {

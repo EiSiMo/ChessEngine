@@ -25,7 +25,7 @@ fn load_csv(path: &str) -> io::Result<Vec<Vec<String>>> {
 fn main() {
     let mut total_tests: f32 = 0.0;
     let mut correct_tests: f32 = 0.0;
-    let sts = load_csv("C:/Users/Moritz/RustroverProjects/ChessEngine/src/bin/stockfish_testsuite.csv").unwrap();
+    let sts = load_csv("src/bin/stockfish_testsuite.csv").unwrap();
     let mut engine = Engine::new("Yakari".to_string(), "EiSiMo".to_string());
 
     // Set the time limit to 1 second

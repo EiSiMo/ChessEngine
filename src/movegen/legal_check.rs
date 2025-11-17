@@ -1,7 +1,11 @@
-// FILENAME: legal_check.rs
 use crate::board::{Board, Color, PieceType};
 use crate::movegen::tables::{get_bishop_attacks, get_rook_attacks, ATTACKING_PAWNS, KING_ATTACKS, KNIGHT_ATTACKS, MAGICS_BISHOP, MAGICS_ROOK, PREMASKS_BISHOP, PREMASKS_ROOK, RELEVANT_BITS_BISHOP, RELEVANT_BITS_ROOK};
 use crate::square::{Square, SQUARES};
+
+pub fn is_current_king_attacked(board: &Board) -> bool {
+    let king = board.pieces[PieceType::King as usize][board.side_to_move as usize];
+    is_square_attacked(board, SQUARES[king.trailing_zeros() as usize], board.side_to_move)
+}
 
 /// Checks if the king of the side that is NOT to move is in check
 pub fn is_other_king_attacked(board: &Board) -> bool {
