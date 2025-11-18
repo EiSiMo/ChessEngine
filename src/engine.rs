@@ -1,7 +1,7 @@
-// ... (your use statements)
 use crate::board::Board;
 use crate::r#move::Move;
 use crate::search::alpha_beta::alpha_beta;
+use std::time::{Instant, Duration};
 
 pub struct Engine {
     pub name: String,
@@ -32,8 +32,51 @@ impl Engine {
         }
     }
 
-    pub fn search(&mut self, depth: u8) -> String {
-        let (opt_move, _score) = alpha_beta(&mut self.board, depth, 0, -i32::MAX, i32::MAX);
+    pub fn search(&mut self, time_limit_ms: u64) -> String {
+        let start_time = Instant::now();
+        let time_limit = Duration::from_millis(time_limit_ms);
+        
+        // We track nodes to limit how often we check the clock inside alpha_beta
+        let mut nodes = 0;
+
+        // Initial search at depth 1
+        let (mut opt_move, mut _score) = alpha_beta(
+            &mut self.board, 
+            1, 
+            0, 
+            -i32::MAX, 
+            i32::MAX, 
+            start_time, 
+            time_limit, 
+            &mut nodes
+        );
+        
+        let mut depth = 2;
+
+        // Iterative Deepening
+        while start_time.elapsed() < time_limit {
+            let (new_move, new_score) = alpha_beta(
+                &mut self.board, 
+                depth, 
+                0, 
+                -i32::MAX, 
+                i32::MAX, 
+                start_time, 
+                time_limit, 
+                &mut nodes
+            );
+
+            // If time ran out during the search, alpha_beta returns garbage (None, 0).
+            // We must verify we still have time before accepting the new result.
+            if start_time.elapsed() > time_limit {
+                break; // Discard new_move, keep the one from the previous depth
+            }
+
+            opt_move = new_move;
+            _score = new_score;
+            
+            depth += 1;
+        }
 
         if let Some(mv) = opt_move {
             mv.to_algebraic()

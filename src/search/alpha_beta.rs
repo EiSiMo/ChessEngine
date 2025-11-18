@@ -1,8 +1,9 @@
-use crate::board::{Board, Color}; // <-- Assuming you have a Color enum (e.g., Color::White, Color::Black)
+use crate::board::{Board, Color};
 use crate::eval::basic::evaluate_board;
 use crate::movegen::generate_pseudo_legal_moves;
 use crate::movegen::legal_check::*;
 use crate::r#move::{Move, MoveList};
+use std::time::{Instant, Duration};
 
 // A score high enough to be > any material eval, but low enough to not overflow when adding ply
 const MATE_SCORE: i32 = 1_000_000;
@@ -21,7 +22,20 @@ pub fn alpha_beta(
     ply: u8,
     mut alpha: i32,
     beta: i32,
+    start_time: Instant,
+    time_limit: Duration,
+    nodes: &mut u64,
 ) -> (Option<Move>, i32) {
+    // Check for time usage every 4096 nodes to reduce system call overhead
+    if *nodes % 4096 == 0 {
+        if start_time.elapsed() > time_limit {
+            // Return immediately. The return value here effectively signals an abort,
+            // but the engine must discard this result.
+            return (None, 0); 
+        }
+    }
+    *nodes += 1;
+
     if depth == 0 {
         return (None, evaluate_board_relative(board));
     }
@@ -42,7 +56,18 @@ pub fn alpha_beta(
         legal_moves_found = true;
 
         // Recursive call with negated and swapped alpha/beta
-        let (_, score) = alpha_beta(board, depth - 1, ply + 1, -beta, -alpha);
+        // Pass time parameters and node counter down
+        let (_, score) = alpha_beta(board, depth - 1, ply + 1, -beta, -alpha, start_time, time_limit, nodes);
+        
+        // If we aborted deeper in the tree (returned 0 due to timeout), 
+        // we should technically propagate that up, but checking elapsed() 
+        // at the loop start (via recursion) handles it eventually.
+        // For a strict abort, we check here too:
+        if *nodes % 4096 == 0 && start_time.elapsed() > time_limit {
+             board.undo_move(undo_mv);
+             return (None, 0);
+        }
+
         let current_score = -score;
 
         if current_score > best_score {
