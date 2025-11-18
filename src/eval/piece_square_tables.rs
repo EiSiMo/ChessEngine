@@ -130,47 +130,49 @@ pub const EG_KING_TABLE: [i32; 64] = [
     -53, -34, -21, -11, -28, -14, -24, -43
 ];
 
-/// Helper function to reverse the table at compile time
-const fn reverse_psqt(table: [i32; 64]) -> [i32; 64] {
-    let mut reversed = [0; 64];
+/// Helper function to mirror the table vertically at compile time
+const fn mirror_psqt(table: [i32; 64]) -> [i32; 64] {
+    let mut mirrored = [0; 64];
     let mut i = 0;
     while i < 64 {
-        reversed[i] = table[63 - i];
+        // XOR 56 maps rank 1 to 8, 2 to 7 etc, keeping files intact
+        mirrored[i] = table[i ^ 56];
         i += 1;
     }
-    reversed
+    mirrored
 }
 
 // Type signature: [Piece (6)] -> [Color (2)] -> [Phase (2)] -> [Square (64)]
 pub const PSQT: [[[[i32; 64]; 2]; 2]; 6] = [
     // 1. PAWN
     [
-        [MG_PAWN_TABLE, EG_PAWN_TABLE],                               // White
-        [reverse_psqt(MG_PAWN_TABLE), reverse_psqt(EG_PAWN_TABLE)]    // Black (Reversed)
+        [mirror_psqt(MG_PAWN_TABLE), mirror_psqt(EG_PAWN_TABLE)],     // White (Muss geflippt werden!)
+        [MG_PAWN_TABLE, EG_PAWN_TABLE]                                // Black (Ist bereits korrekt für schwarze Indices)
     ],
     // 2. KNIGHT
     [
-        [MG_KNIGHT_TABLE, EG_KNIGHT_TABLE],                           // White
-        [reverse_psqt(MG_KNIGHT_TABLE), reverse_psqt(EG_KNIGHT_TABLE)]// Black (Reversed)
+        [mirror_psqt(MG_KNIGHT_TABLE), mirror_psqt(EG_KNIGHT_TABLE)], // White
+        [MG_KNIGHT_TABLE, EG_KNIGHT_TABLE]                            // Black
     ],
     // 3. BISHOP
     [
-        [MG_BISHOP_TABLE, EG_BISHOP_TABLE],                           // White
-        [reverse_psqt(MG_BISHOP_TABLE), reverse_psqt(EG_BISHOP_TABLE)]// Black (Reversed)
+        [mirror_psqt(MG_BISHOP_TABLE), mirror_psqt(EG_BISHOP_TABLE)], // White
+        [MG_BISHOP_TABLE, EG_BISHOP_TABLE]                            // Black
     ],
     // 4. ROOK
     [
-        [MG_ROOK_TABLE, EG_ROOK_TABLE],                               // White
-        [reverse_psqt(MG_ROOK_TABLE), reverse_psqt(EG_ROOK_TABLE)]    // Black (Reversed)
+        [mirror_psqt(MG_ROOK_TABLE), mirror_psqt(EG_ROOK_TABLE)],     // White
+        [MG_ROOK_TABLE, EG_ROOK_TABLE]                                // Black
     ],
     // 5. QUEEN
     [
-        [MG_QUEEN_TABLE, EG_QUEEN_TABLE],                             // White
-        [reverse_psqt(MG_QUEEN_TABLE), reverse_psqt(EG_QUEEN_TABLE)]  // Black (Reversed)
+        [mirror_psqt(MG_QUEEN_TABLE), mirror_psqt(EG_QUEEN_TABLE)],   // White
+        [MG_QUEEN_TABLE, EG_QUEEN_TABLE]                              // Black
     ],
     // 6. KING
     [
-        [MG_KING_TABLE, EG_KING_TABLE],                               // White
-        [reverse_psqt(MG_KING_TABLE), reverse_psqt(EG_KING_TABLE)]    // Black (Reversed)
+        [mirror_psqt(MG_KING_TABLE), mirror_psqt(EG_KING_TABLE)],     // White
+        [MG_KING_TABLE, EG_KING_TABLE]                                // Black
     ],
 ];
+
