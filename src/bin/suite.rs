@@ -29,7 +29,7 @@ fn main() {
     let mut engine = Engine::new("Yakari".to_string(), "EiSiMo".to_string());
 
     // Set the time limit to 1 second
-    let time_limit = Duration::from_millis(500);
+    let time_limit = Duration::from_millis(1000);
 
     for test in &sts {
         let fen = &test[0];
@@ -40,7 +40,7 @@ fn main() {
         // Record start time
         let start_time = Instant::now();
 
-        let result = engine.search(490_u64);
+        let result = engine.search(990_u64);
 
         // Calculate duration
         let duration = start_time.elapsed();

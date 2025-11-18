@@ -1,72 +1,65 @@
 use crate::board::*;
 use crate::eval::piece_square_tables::PSQT;
 
-// Pawn, Knight, Bishop, Rook, Queen
-pub const MATERIAL_WEIGHTS: [i32; 5] = [100, 300, 300, 500, 900];
-pub const PHASE_WEIGHTS: [i32; 5] = [0, 1, 1, 2, 4];
-
 pub fn evaluate_board(board: &Board) -> i32 {
     let mut mg_score = 0_i32;
     let mut eg_score = 0_i32;
     let mut phase = 0_i32;
 
-    // --- WHITE PIECES ---
-    // Iterating Pawn (0) to Queen (4) for Material + Phase + PSQT
-    for pt in 0..5 {
-        let mut pieces = board.pieces[pt][Color::White as usize];
-        let count = pieces.count_ones() as i32;
-        
-        mg_score += count * MATERIAL_WEIGHTS[pt];
-        eg_score += count * MATERIAL_WEIGHTS[pt];
-        phase += count * PHASE_WEIGHTS[pt];
+    // We use a macro to force loop unrolling.
+    // This enables the compiler to use constant offsets for PSQT access
+    // instead of calculating addresses at runtime based on a loop variable.
+    macro_rules! score_piece {
+        ($pt:expr, $phase_weight:expr) => {
+            // --- WHITE ---
+            let mut pieces = board.pieces[$pt][Color::White as usize];
+            if pieces > 0 {
+                // Phase calculation uses count_ones (POPPCNT) which is very fast
+                phase += (pieces.count_ones() as i32) * $phase_weight;
 
-        while pieces > 0 {
-            let sq = pieces.trailing_zeros() as usize;
-            pieces &= pieces - 1; // Clear LS1B
-            
-            // Access: [Piece][Color][Phase (0=MG, 1=EG)][Square]
-            mg_score += PSQT[pt][Color::White as usize][0][sq];
-            eg_score += PSQT[pt][Color::White as usize][1][sq];
-        }
+                while pieces > 0 {
+                    let sq = pieces.trailing_zeros() as usize;
+                    pieces &= pieces - 1; // Clear LS1B
+
+                    // Material is already baked into PSQT, so we just add the table value
+                    // Since $pt is a const literal here, this compiles to a direct memory access
+                    mg_score += PSQT[$pt][Color::White as usize][0][sq];
+                    eg_score += PSQT[$pt][Color::White as usize][1][sq];
+                }
+            }
+
+            // --- BLACK ---
+            let mut pieces = board.pieces[$pt][Color::Black as usize];
+            if pieces > 0 {
+                phase += (pieces.count_ones() as i32) * $phase_weight;
+
+                while pieces > 0 {
+                    let sq = pieces.trailing_zeros() as usize;
+                    pieces &= pieces - 1;
+
+                    mg_score -= PSQT[$pt][Color::Black as usize][0][sq];
+                    eg_score -= PSQT[$pt][Color::Black as usize][1][sq];
+                }
+            }
+        };
     }
 
-    // King (Index 5) - No Material/Phase weight, only PSQT
-    let mut white_king = board.pieces[5][Color::White as usize];
-    if white_king > 0 {
-        let sq = white_king.trailing_zeros() as usize;
-        mg_score += PSQT[5][Color::White as usize][0][sq];
-        eg_score += PSQT[5][Color::White as usize][1][sq];
-    }
+    // Explicitly unrolled execution order
+    // Pawn (0), Weight 0
+    score_piece!(0, 0);
+    // Knight (1), Weight 1
+    score_piece!(1, 1);
+    // Bishop (2), Weight 1
+    score_piece!(2, 1);
+    // Rook (3), Weight 2
+    score_piece!(3, 2);
+    // Queen (4), Weight 4
+    score_piece!(4, 4);
+    // King (5), Weight 0 (Phase doesn't change)
+    score_piece!(5, 0);
 
-    // --- BLACK PIECES ---
-    // Iterating Pawn (0) to Queen (4)
-    for pt in 0..5 {
-        let mut pieces = board.pieces[pt][Color::Black as usize];
-        let count = pieces.count_ones() as i32;
-
-        mg_score -= count * MATERIAL_WEIGHTS[pt];
-        eg_score -= count * MATERIAL_WEIGHTS[pt];
-        phase += count * PHASE_WEIGHTS[pt];
-
-        while pieces > 0 {
-            let sq = pieces.trailing_zeros() as usize;
-            pieces &= pieces - 1;
-
-            mg_score -= PSQT[pt][Color::Black as usize][0][sq];
-            eg_score -= PSQT[pt][Color::Black as usize][1][sq];
-        }
-    }
-
-    // King (Index 5) for Black
-    let mut black_king = board.pieces[5][Color::Black as usize];
-    if black_king > 0 {
-        let sq = black_king.trailing_zeros() as usize;
-        mg_score -= PSQT[5][Color::Black as usize][0][sq];
-        eg_score -= PSQT[5][Color::Black as usize][1][sq];
-    }
-
-    // Tapered Evaluation Interpolation
-    let phase = phase.min(24); // Clamp to 24 max
+    // Tapered Evaluation
+    let phase = phase.min(24);
     let mg_phase = phase;
     let eg_phase = 24 - phase;
 
