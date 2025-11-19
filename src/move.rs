@@ -87,6 +87,11 @@ impl MoveList {
         self.count += 1;
     }
 
+    // Added swap method as requested
+    pub fn swap(&mut self, a: usize, b: usize) {
+        self.moves[..self.count].swap(a, b);
+    }
+
     pub fn len(&self) -> usize {
         self.count
     }

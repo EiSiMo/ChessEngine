@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use chess_engine::engine::Engine;
 use std::time::{Instant, Duration};
+use chess_engine::zobrist::init_zobrist;
 // EACH TEST CAN ONLY TAKE ONE SECOND MAX TO KEEP RESULTS COMPARABLE
 
 fn load_csv(path: &str) -> io::Result<Vec<Vec<String>>> {
@@ -23,6 +24,7 @@ fn load_csv(path: &str) -> io::Result<Vec<Vec<String>>> {
 }
 
 fn main() {
+    init_zobrist();
     let mut total_tests: f32 = 0.0;
     let mut correct_tests: f32 = 0.0;
     let sts = load_csv("src/bin/stockfish_testsuite.csv").unwrap();
@@ -30,6 +32,7 @@ fn main() {
 
     // Set the time limit to 1 second
     let time_limit = Duration::from_millis(1000);
+
 
     for test in &sts {
         let fen = &test[0];

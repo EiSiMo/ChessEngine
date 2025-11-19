@@ -8,3 +8,5 @@ pub mod parsing;
 pub mod search;
 pub mod engine;
 pub mod uci;
+pub mod tt;
+pub mod zobrist;

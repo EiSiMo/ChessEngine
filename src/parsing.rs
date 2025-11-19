@@ -12,7 +12,7 @@ impl Board {
         // Initialisiere die Arrays
         let mut pieces = [[0u64; 2]; 6];
         let mut occupied = [0u64; 2];
-        let mut pieces_on_squares = [None; 64]; // <-- ADDED
+        let mut pieces_on_squares = [None; 64];
 
         // Part 1: Piece placement
         let placement = parts.next().unwrap_or("");
@@ -65,27 +65,27 @@ impl Board {
                     match c {
                         'p' => {
                             pieces[PieceType::Pawn as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Pawn); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Pawn);
                         }
                         'n' => {
                             pieces[PieceType::Knight as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Knight); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Knight);
                         }
                         'b' => {
                             pieces[PieceType::Bishop as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Bishop); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Bishop);
                         }
                         'r' => {
                             pieces[PieceType::Rook as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Rook); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Rook);
                         }
                         'q' => {
                             pieces[PieceType::Queen as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::Queen); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::Queen);
                         }
                         'k' => {
                             pieces[PieceType::King as usize][color_idx] |= mask;
-                            pieces_on_squares[sq as usize] = Some(PieceType::King); // <-- ADDED
+                            pieces_on_squares[sq as usize] = Some(PieceType::King);
                         }
                         _ => {}
                     }
@@ -125,7 +125,6 @@ impl Board {
                 let file = (chars[0] as u8 - b'a') as u8;
                 let rank = (chars[1] as u8 - b'1') as u8;
                 let sq_index = rank * 8 + file;
-                // This is unsafe, but assumes the FEN is valid
                 Some(unsafe { mem::transmute::<u8, Square>(sq_index) })
             }
         };
@@ -139,10 +138,11 @@ impl Board {
         let all_occupied = occupied[Color::White as usize] | occupied[Color::Black as usize];
         let empty_squares = !all_occupied;
 
-        Board {
+        // Create mutable board with empty hash
+        let mut board = Board {
             side_to_move,
             pieces,
-            pieces_on_squares, // <-- ADDED
+            pieces_on_squares,
             occupied,
             all_occupied,
             empty_squares,
@@ -150,7 +150,13 @@ impl Board {
             en_passant_target,
             halfmove_clock,
             fullmove_number,
-        }
+            hash: 0, // Initialize hash to 0
+        };
+
+        // Calculate the correct initial Zobrist hash based on the parsed FEN
+        board.recalculate_hash();
+
+        board
     }
 
     /// Converts the current board state into a FEN string.
