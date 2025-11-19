@@ -1,19 +1,18 @@
 use chess_engine::board::Board;
-use chess_engine::movegen::generate_pseudo_legal_moves;
+use chess_engine::movegen::picker::MoveGenerator;
 use chess_engine::movegen::legal_check::is_other_king_attacked;
-use chess_engine::r#move::MoveList;
 use criterion::{criterion_group, criterion_main, Criterion};
-use chess_engine::zobrist::init_zobrist;
 
 fn count_legal_moves_recursive(board: &mut Board, depth: u8) -> u64 {
     if depth == 0 {
         return 1_u64;
     }
-    let mut list = MoveList::new();
-    generate_pseudo_legal_moves(&board, &mut list);
+
+    let mut generator = MoveGenerator::new();
     let mut leaf_nodes = 0_u64;
-    for mv in list.iter() {
-        let undo_info = board.make_move(*mv);
+
+    while let Some(mv) = generator.next(board) {
+        let undo_info = board.make_move(mv);
         if !is_other_king_attacked(board) {
             leaf_nodes += count_legal_moves_recursive(board, depth - 1);
         }
@@ -22,9 +21,8 @@ fn count_legal_moves_recursive(board: &mut Board, depth: u8) -> u64 {
     leaf_nodes
 }
 
-
 fn run_perft_benchmark(c: &mut Criterion) {
-    init_zobrist();
+    // init_zobrist() is no longer needed
     let mut board = Board::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     c.bench_function("standard_perft5", |b| {

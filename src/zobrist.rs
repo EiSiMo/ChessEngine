@@ -30,11 +30,8 @@ pub struct ZobristKeys {
 
 static KEYS: OnceLock<ZobristKeys> = OnceLock::new();
 
-pub fn init_zobrist() {
-    if KEYS.get().is_some() {
-        return;
-    }
-
+// Helper function to generate keys, used by the lazy initializer
+fn generate_keys() -> ZobristKeys {
     let mut rng = Xorshift::new(1070372); // Fixed seed for reproducibility
 
     let mut pieces = [[0; 64]; 12];
@@ -56,18 +53,17 @@ pub fn init_zobrist() {
 
     let side_to_move = rng.next();
 
-    let keys = ZobristKeys {
+    ZobristKeys {
         pieces,
         castling,
         en_passant,
         side_to_move,
-    };
-
-    KEYS.set(keys).expect("Zobrist keys already initialized");
+    }
 }
 
+
 pub fn zobrist_keys() -> &'static ZobristKeys {
-    KEYS.get().expect("Zobrist keys not initialized! Call init_zobrist() in main.")
+    KEYS.get_or_init(generate_keys)
 }
 
 pub fn piece_index(pt: PieceType, c: Color) -> usize {

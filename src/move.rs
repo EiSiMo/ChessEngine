@@ -87,6 +87,14 @@ impl MoveList {
         self.count += 1;
     }
 
+    pub fn pull(&mut self) -> Option<Move> {
+        if self.count > 0 {
+            self.count -= 1;
+            return Some(self.moves[self.count]);
+        }
+        None
+    }
+
     pub fn swap(&mut self, a: usize, b: usize) {
         self.moves[..self.count].swap(a, b);
     }
@@ -106,6 +114,8 @@ impl MoveList {
     pub fn contains(&self, mv: &Move) -> bool {
         self.moves.contains(mv)
     }
+
+    pub fn clear(&mut self) { self.count = 0 }
 }
 
 impl Index<usize> for MoveList {

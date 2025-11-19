@@ -1,20 +1,17 @@
 use chess_engine::board::Board;
-use chess_engine::movegen::generate_pseudo_legal_moves;
 use chess_engine::movegen::legal_check::is_other_king_attacked;
-use chess_engine::r#move::MoveList;
+use chess_engine::movegen::picker::MoveGenerator;
 
 fn count_legal_moves_recursive(board: &mut Board, depth: u8) -> u64 {
     if depth == 0 {
         return 1_u64;
     }
 
-    let mut list = MoveList::new();
-    generate_pseudo_legal_moves(&board, &mut list);
-
+    let mut generator = MoveGenerator::new();
     let mut leaf_nodes = 0_u64;
-    for mv in list.iter() {
-        let undo_info = board.make_move(*mv);
 
+    while let Some(mv) = generator.next(board) {
+        let undo_info = board.make_move(mv);
         if !is_other_king_attacked(board) {
             leaf_nodes += count_legal_moves_recursive(board, depth - 1);
         }
