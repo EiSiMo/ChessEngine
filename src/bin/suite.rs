@@ -3,7 +3,6 @@ use std::io::{self, BufRead};
 use chess_engine::engine::Engine;
 use std::time::{Instant, Duration};
 use chess_engine::zobrist::init_zobrist;
-// EACH TEST CAN ONLY TAKE ONE SECOND MAX TO KEEP RESULTS COMPARABLE
 
 fn load_csv(path: &str) -> io::Result<Vec<Vec<String>>> {
     let file = File::open(path)?;
@@ -25,30 +24,25 @@ fn load_csv(path: &str) -> io::Result<Vec<Vec<String>>> {
 
 fn main() {
     init_zobrist();
+    let time_limit_ms = 1000_u64;
+    let time_limit = Duration::from_millis(time_limit_ms);
+    
     let mut total_tests: f32 = 0.0;
     let mut correct_tests: f32 = 0.0;
     let sts = load_csv("src/bin/stockfish_testsuite.csv").unwrap();
     let mut engine = Engine::new("Yakari".to_string(), "EiSiMo".to_string());
-
-    // Set the time limit to 1 second
-    let time_limit = Duration::from_millis(1000);
-
-
+    
     for test in &sts {
         let fen = &test[0];
         let bm = &test[1];
 
         engine.setpos_fen(fen);
 
-        // Record start time
         let start_time = Instant::now();
 
-        let result = engine.search(990_u64);
+        let result = engine.search(time_limit_ms-1);
 
-        // Calculate duration
         let duration = start_time.elapsed();
-
-        // Check if the test exceeded the time limit
         if duration > time_limit {
             panic!(
                 "Test exceeded 1 second limit: {:?} for FEN: {}",

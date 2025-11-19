@@ -7,15 +7,12 @@ pub fn is_current_king_attacked(board: &Board) -> bool {
     is_square_attacked(board, SQUARES[king.trailing_zeros() as usize], board.side_to_move)
 }
 
-/// Checks if the king of the side that is NOT to move is in check
 pub fn is_other_king_attacked(board: &Board) -> bool {
     let king = board.pieces[PieceType::King as usize][!board.side_to_move as usize];
     is_square_attacked(board, SQUARES[king.trailing_zeros() as usize], board.side_to_move)
 }
 
-// TODO check if castle is legal (squares in between)
 
-/// calculate if a square on the board is attacked by a color
 pub fn is_square_attacked(board: &Board, square: Square, color: Color) -> bool {
     // 1. Non sliding
     // 1.1 Pawn

@@ -1,5 +1,5 @@
 use crate::board::*;
-use crate::r#move::{Move, MoveList, MOVE_FLAG_CAPTURE, MOVE_FLAG_QUIET};
+use crate::r#move::*;
 use crate::square::SQUARES;
 use super::tables::*;
 

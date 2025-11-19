@@ -1,6 +1,6 @@
 use chess_engine::board::Board;
 use criterion::{criterion_group, criterion_main, Criterion};
-use chess_engine::eval::basic::evaluate_board;
+use chess_engine::eval::evaluate_board;
 use chess_engine::zobrist::init_zobrist;
 
 fn run_eval_benchmark(c: &mut Criterion) {

@@ -1,6 +1,6 @@
 use crate::r#move::*;
 use crate::square::Square;
-use crate::zobrist::{self, zobrist_keys}; // Import Zobrist
+use crate::zobrist::{self, zobrist_keys};
 use std::ops::Not;
 
 pub const CASTLING_WK_FLAG: u8 = 1;
@@ -78,12 +78,10 @@ pub struct Board {
     pub halfmove_clock: u8,
     pub fullmove_number: u16,
 
-    // Added Zobrist Hash
     pub hash: u64,
 }
 
 impl Board {
-    // Helper to get the EP file index (0-7) or 8 if None
     fn ep_file_index(ep: Option<Square>) -> usize {
         match ep {
             Some(sq) => (sq as usize) % 8,
@@ -91,12 +89,10 @@ impl Board {
         }
     }
 
-    // Should be called after loading FEN or creating board
     pub fn recalculate_hash(&mut self) {
         let keys = zobrist_keys();
         let mut hash = 0;
 
-        // 1. Pieces
         for sq in 0..64 {
             if let Some(pt) = self.pieces_on_squares[sq] {
                 let color = if (self.pieces[pt as usize][Color::White as usize] & (1 << sq)) != 0 {
@@ -107,23 +103,16 @@ impl Board {
                 hash ^= keys.pieces[zobrist::piece_index(pt, color)][sq];
             }
         }
-
-        // 2. Castling
         hash ^= keys.castling[self.castling_rights as usize];
-
-        // 3. En Passant
         hash ^= keys.en_passant[Self::ep_file_index(self.en_passant_target)];
 
-        // 4. Side to move
         if self.side_to_move == Color::Black {
             hash ^= keys.side_to_move;
         }
 
         self.hash = hash;
     }
-
-    // --- Original methods with added hashing ---
-
+    
     fn rm_piece(
         &mut self,
         target_square: Square,
@@ -132,7 +121,6 @@ impl Board {
         let target_square_bitboard = target_square.to_bitboard();
         let piece_type = self.pieces_on_squares[target_square as usize].unwrap();
 
-        // UPDATE HASH: Remove piece
         let keys = zobrist_keys();
         self.hash ^= keys.pieces[zobrist::piece_index(piece_type, color)][target_square as usize];
 
@@ -149,7 +137,6 @@ impl Board {
     fn put_piece(&mut self, target_square: Square, color: Color, piece_type: PieceType) {
         let target_square_bitboard = target_square.to_bitboard();
 
-        // UPDATE HASH: Add piece
         let keys = zobrist_keys();
         self.hash ^= keys.pieces[zobrist::piece_index(piece_type, color)][target_square as usize];
 
@@ -169,12 +156,9 @@ impl Board {
     pub fn make_move(&mut self, mv: Move) -> UndoMove {
         let keys = zobrist_keys();
 
-        // HASH UPDATE: Remove old state (EP and Castling)
-        // XORing removes the old value from the hash
         self.hash ^= keys.en_passant[Self::ep_file_index(self.en_passant_target)];
         self.hash ^= keys.castling[self.castling_rights as usize];
 
-        // 1. Extract parts from move
         let from = mv.get_from();
         let to = mv.get_to();
         let flags = mv.get_flags();
@@ -189,7 +173,6 @@ impl Board {
         let mut opt_captured_piece: Option<PieceType> = None;
         let mut opt_en_passant_target: Option<Square> = None;
 
-        // 4. Make the actual moves (rm_piece/put_piece update piece hashes automatically)
         match flags {
             MOVE_FLAG_QUIET => {
                 self.move_piece(from, to, self.side_to_move);
@@ -262,7 +245,6 @@ impl Board {
             _ => { panic!("unable to make_move: invalid flags: {}", flags); }
         }
 
-        // 5. Update castling rights
         let wk = self.pieces[PieceType::King as usize][Color::White as usize];
         let wr = self.pieces[PieceType::Rook as usize][Color::White as usize];
         let bk = self.pieces[PieceType::King as usize][Color::Black as usize];
@@ -275,16 +257,12 @@ impl Board {
             castling_right_wk | castling_right_wq | castling_right_bk | castling_right_bq;
         self.castling_rights = self.castling_rights & new_castling_rights;
 
-        // 6. Update en passant target
         self.en_passant_target = opt_en_passant_target;
 
-        // HASH UPDATE: Add new state
         self.hash ^= keys.en_passant[Self::ep_file_index(self.en_passant_target)];
         self.hash ^= keys.castling[self.castling_rights as usize];
-        // HASH UPDATE: Side to move (always changes)
         self.hash ^= keys.side_to_move;
 
-        // 7. Update halfmove clock
         let new_friendly_pawns = self.pieces[PieceType::Pawn as usize][self.side_to_move as usize];
         let new_total_pieces = self.all_occupied.count_ones();
         let pawns_changed = old_friendly_pawns ^ new_friendly_pawns;
@@ -292,13 +270,10 @@ impl Board {
         let increase_halfmove_clock = ((pawns_changed + piece_captured) == 0) as u8;
         self.halfmove_clock = increase_halfmove_clock * (self.halfmove_clock + 1);
 
-        // 8. Increase fullmove
         self.fullmove_number += self.side_to_move as u16;
 
-        // 9. Flip side
         self.side_to_move = !self.side_to_move;
 
-        // 10. Return Undo
         UndoMove::new(
             mv,
             opt_captured_piece,
@@ -311,35 +286,26 @@ impl Board {
     pub fn undo_move(&mut self, undo_info: UndoMove) {
         let keys = zobrist_keys();
 
-        // HASH UPDATE: We must remove the CURRENT state hash before overwriting state variables.
-        // 1. Remove current side hash (effectively flipping it back)
         self.hash ^= keys.side_to_move;
-        // 2. Remove current castling and EP hash
         self.hash ^= keys.castling[self.castling_rights as usize];
         self.hash ^= keys.en_passant[Self::ep_file_index(self.en_passant_target)];
 
-        // 1. Restore simple state
         self.castling_rights = undo_info.old_castling_rights;
         self.en_passant_target = undo_info.old_en_passant_square;
         self.halfmove_clock = undo_info.old_halfmove_clock;
 
-        // HASH UPDATE: Restore OLD state hash
         self.hash ^= keys.castling[self.castling_rights as usize];
         self.hash ^= keys.en_passant[Self::ep_file_index(self.en_passant_target)];
 
-        // 2. Flip side *before* piece ops
         self.side_to_move = !self.side_to_move;
 
-        // 3. Decrement fullmove
         self.fullmove_number -= self.side_to_move as u16;
 
-        // 4. Extract move data
         let mv = undo_info.mv;
         let from = mv.get_from();
         let to = mv.get_to();
         let flags = mv.get_flags();
 
-        // 5. Reverse pieces (helpers will update hash automatically)
         match flags {
             MOVE_FLAG_QUIET => {
                 self.move_piece(to, from, self.side_to_move);

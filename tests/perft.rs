@@ -13,14 +13,11 @@ fn count_legal_moves_recursive(board: &mut Board, depth: u8) -> u64 {
 
     let mut leaf_nodes = 0_u64;
     for mv in list.iter() {
-        // Store the undo info when making the move
         let undo_info = board.make_move(*mv);
 
         if !is_other_king_attacked(board) {
             leaf_nodes += count_legal_moves_recursive(board, depth - 1);
         }
-
-        // Undo the move to restore the board state for the next iteration
         board.undo_move(undo_info);
     }
     leaf_nodes

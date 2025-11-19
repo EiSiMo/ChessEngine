@@ -4,12 +4,9 @@ use crate::r#move::*;
 use crate::square::Square;
 
 impl Board {
-    /// Creates a new Board instance from a FEN string.
-    /// Assumes the FEN string is valid.
     pub fn from_fen(fen: &str) -> Self {
         let mut parts = fen.split_whitespace();
 
-        // Initialisiere die Arrays
         let mut pieces = [[0u64; 2]; 6];
         let mut occupied = [0u64; 2];
         let mut pieces_on_squares = [None; 64];
@@ -20,7 +17,7 @@ impl Board {
         let mut file = 0;
 
         for c in placement.chars() {
-            if c.is_digit(10) {
+            if c.is_ascii_digit() {
                 file += c.to_digit(10).unwrap_or(0) as usize;
             } else if c == '/' {
                 rank -= 1;
@@ -122,8 +119,8 @@ impl Board {
             "-" => None,
             sq_str => {
                 let chars: Vec<char> = sq_str.chars().collect();
-                let file = (chars[0] as u8 - b'a') as u8;
-                let rank = (chars[1] as u8 - b'1') as u8;
+                let file = chars[0] as u8 - b'a';
+                let rank = chars[1] as u8 - b'1';
                 let sq_index = rank * 8 + file;
                 Some(unsafe { mem::transmute::<u8, Square>(sq_index) })
             }
@@ -223,8 +220,8 @@ impl Board {
         fen.push(' ');
         if let Some(sq) = self.en_passant_target {
             let sq_index = sq as u8;
-            let file = (sq_index % 8) as u8;
-            let rank = (sq_index / 8) as u8;
+            let file = sq_index % 8;
+            let rank = sq_index / 8;
             fen.push((b'a' + file) as char);
             fen.push((b'1' + rank) as char);
         } else {
@@ -254,8 +251,8 @@ impl Move {
     /// Converts algebraic notation (e.g., "a1") to a Square.
     /// Assumes valid input.
     fn alg_to_square(alg: &str) -> Square {
-        let file = (alg.as_bytes()[0] - b'a') as u8;
-        let rank = (alg.as_bytes()[1] - b'1') as u8;
+        let file = alg.as_bytes()[0] - b'a';
+        let rank = alg.as_bytes()[1] - b'1';
         let sq_index = rank * 8 + file;
         // This is unsafe, but we assume valid algebraic notation
         unsafe { mem::transmute::<u8, Square>(sq_index) }

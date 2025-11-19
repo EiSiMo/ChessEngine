@@ -1,17 +1,18 @@
-// FILENAME: non_sliders.rs
-use crate::board::*;
-use crate::movegen::legal_check::is_square_attacked;
-use crate::r#move::*;
-use crate::square::*;
 use super::tables::{KING_ATTACKS, KNIGHT_ATTACKS};
+use crate::board::*;
+use crate::r#move::*;
+use crate::movegen::legal_check::is_square_attacked;
+use crate::square::*;
 
 pub fn generate_knight_moves(board: &Board, list: &mut MoveList) {
     let enemy_occupied = board.occupied[!board.side_to_move as usize];
-    let mut friendly_knights = board.pieces[PieceType::Knight as usize][board.side_to_move as usize];
+    let mut friendly_knights =
+        board.pieces[PieceType::Knight as usize][board.side_to_move as usize];
 
     while friendly_knights != 0 {
         let square = SQUARES[friendly_knights.trailing_zeros() as usize];
-        let mut attacks = KNIGHT_ATTACKS[square as usize] & !board.occupied[board.side_to_move as usize];
+        let mut attacks =
+            KNIGHT_ATTACKS[square as usize] & !board.occupied[board.side_to_move as usize];
 
         while attacks != 0 {
             let attack = SQUARES[attacks.trailing_zeros() as usize];
@@ -58,7 +59,6 @@ pub fn generate_king_moves(board: &Board, list: &mut MoveList) {
         attacks &= attacks - 1;
     }
 
-    // TODO Optimize the is attacked testing on castling
     // 2. Generate castling king moves
     if board.side_to_move == Color::White {
         // King must not be in check to castle
@@ -67,46 +67,39 @@ pub fn generate_king_moves(board: &Board, list: &mut MoveList) {
         }
 
         // Kingside (OO)
-        if (board.castling_rights & CASTLING_WK_FLAG) != 0 {
-            if (board.all_occupied & CASTLING_WK_MASK) == 0 {
-                // Check F1 (path). G1 (landing) is checked by perft function.
-                if !is_square_attacked(board, Square::F1, Color::Black) {
+        if (board.castling_rights & CASTLING_WK_FLAG) != 0
+            && (board.all_occupied & CASTLING_WK_MASK) == 0
+            && !is_square_attacked(board, Square::F1, Color::Black) {
                     list.push(Move::new(Square::E1, Square::G1, MOVE_FLAG_WK_CASTLE));
                 }
-            }
-        }
+
         // Queenside (OOO)
-        if (board.castling_rights & CASTLING_WQ_FLAG) != 0 {
-            if (board.all_occupied & CASTLING_WQ_MASK) == 0 {
-                // Check D1 (path). C1 (landing) is checked by perft function. B1 is irrelevant.
-                if !is_square_attacked(board, Square::D1, Color::Black) {
-                    list.push(Move::new(Square::E1, Square::C1, MOVE_FLAG_WQ_CASTLE));
-                }
-            }
+        if (board.castling_rights & CASTLING_WQ_FLAG) != 0
+            && (board.all_occupied & CASTLING_WQ_MASK) == 0
+            && !is_square_attacked(board, Square::D1, Color::Black)
+        {
+            list.push(Move::new(Square::E1, Square::C1, MOVE_FLAG_WQ_CASTLE));
         }
-    } else { // Black
+    } else {
+        // Black
         // King must not be in check to castle
         if is_square_attacked(board, Square::E8, Color::White) {
             return;
         }
 
         // Kingside (OO)
-        if (board.castling_rights & CASTLING_BK_FLAG) != 0 {
-            if (board.all_occupied & CASTLING_BK_MASK) == 0 {
-                // Check F8 (path). G8 (landing) is checked by perft function.
-                if !is_square_attacked(board, Square::F8, Color::White) {
-                    list.push(Move::new(Square::E8, Square::G8, MOVE_FLAG_BK_CASTLE));
-                }
-            }
+        if (board.castling_rights & CASTLING_BK_FLAG) != 0
+            && (board.all_occupied & CASTLING_BK_MASK) == 0
+            && !is_square_attacked(board, Square::F8, Color::White)
+        {
+            list.push(Move::new(Square::E8, Square::G8, MOVE_FLAG_BK_CASTLE));
         }
         // Queenside (OOO)
-        if (board.castling_rights & CASTLING_BQ_FLAG) != 0 {
-            if (board.all_occupied & CASTLING_BQ_MASK) == 0 {
-                // Check D8 (path). C8 (landing) is checked by perft function. B8 is irrelevant.
-                if !is_square_attacked(board, Square::D8, Color::White) {
-                    list.push(Move::new(Square::E8, Square::C8, MOVE_FLAG_BQ_CASTLE));
-                }
-            }
+        if (board.castling_rights & CASTLING_BQ_FLAG) != 0
+            && (board.all_occupied & CASTLING_BQ_MASK) == 0
+            && !is_square_attacked(board, Square::D8, Color::White)
+        {
+            list.push(Move::new(Square::E8, Square::C8, MOVE_FLAG_BQ_CASTLE));
         }
     }
 }

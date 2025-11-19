@@ -1,5 +1,5 @@
 use crate::board::{Board, Color};
-use crate::eval::basic::evaluate_board;
+use crate::eval::evaluate_board;
 use crate::movegen::generate_pseudo_legal_moves;
 use crate::movegen::legal_check::*;
 use crate::r#move::{Move, MoveList};
@@ -51,28 +51,20 @@ pub fn alpha_beta(
     nodes: &mut u64,
     tt: &mut TranspositionTable, // Added TT parameter
 ) -> (Option<Move>, i32) {
-    // Check for time usage
-    if *nodes % 4096 == 0 {
-        if start_time.elapsed() > time_limit {
-            return (None, 0);
-        }
+    if (*nodes).is_multiple_of(4096)
+        && start_time.elapsed() > time_limit {
+        return (None, 0);
     }
     *nodes += 1;
-
-    // -----------------------
-    // 1. TT PROBE
-    // -----------------------
-    // We assume board.hash holds the current Zobrist key (u64)
+    
     let tt_key = board.hash;
     let mut tt_move: Option<Move> = None;
 
     if let Some(entry) = tt.probe(tt_key) {
-        // We remember the move from TT to sort it first later
-        if entry.bm.0 != 0 { // Check if move is valid (not 0)
+        if entry.bm.0 != 0 {
             tt_move = Some(entry.bm);
         }
 
-        // Can we use the score for a cutoff?
         if entry.depth >= depth {
             let tt_score = score_from_tt(entry.score, ply);
 
@@ -99,13 +91,8 @@ pub fn alpha_beta(
 
     let mut list = MoveList::new();
     generate_pseudo_legal_moves(board, &mut list);
-
-    // -----------------------
-    // MOVE ORDERING (TT Move First)
-    // -----------------------
-    // If we have a move from TT, we want to search it first!
+    
     if let Some(tm) = tt_move {
-        // Find the move in the list and swap it to the front (index 0)
         for i in 0..list.len() {
             if list[i] == tm {
                 list.swap(0, i);
@@ -117,13 +104,12 @@ pub fn alpha_beta(
     let mut best_move: Option<Move> = None;
     let mut best_score: i32 = -i32::MAX;
     let mut legal_moves_found = false;
-    let alpha_orig = alpha; // Save original alpha to determine NodeType later
+    let alpha_orig = alpha;
 
     for i in 0..list.len() {
         let mv = list[i];
         let undo_mv = board.make_move(mv);
 
-        // Optimization: Check legality locally if possible, but for now rely on King check
         let is_illegal = is_other_king_attacked(board);
         if is_illegal {
             board.undo_move(undo_mv);
@@ -133,7 +119,7 @@ pub fn alpha_beta(
 
         let (_, score) = alpha_beta(board, depth - 1, ply + 1, -beta, -alpha, start_time, time_limit, nodes, tt);
 
-        if *nodes % 4096 == 0 && start_time.elapsed() > time_limit {
+        if (*nodes).is_multiple_of(4096) && start_time.elapsed() > time_limit {
             board.undo_move(undo_mv);
             return (None, 0);
         }
@@ -152,7 +138,7 @@ pub fn alpha_beta(
         }
 
         if alpha >= beta {
-            break; // Beta cutoff
+            break;
         }
     }
 
@@ -163,19 +149,16 @@ pub fn alpha_beta(
             return (None, 0);
         }
     }
-
-    // -----------------------
-    // 2. TT STORE
-    // -----------------------
+    
     let node_type = if best_score <= alpha_orig {
-        NodeType::Alpha // We didn't improve alpha (Fail Low) -> Upper Bound
+        NodeType::Alpha
     } else if best_score >= beta {
-        NodeType::Beta // We caused a cutoff (Fail High) -> Lower Bound
+        NodeType::Beta
     } else {
-        NodeType::Exact // We found a score between alpha and beta
+        NodeType::Exact
     };
 
-    let save_move = best_move.unwrap_or(Move(0)); // Use dummy 0 if no best move
+    let save_move = best_move.unwrap_or(Move(0));
     let save_score = score_to_tt(best_score, ply);
 
     tt.store(tt_key, save_score, depth, node_type, save_move);

@@ -1,4 +1,3 @@
-// --- Material Values (PeSTO Standard) ---
 const MG_PAWN_VAL: i32 = 82;
 const EG_PAWN_VAL: i32 = 94;
 const MG_KNIGHT_VAL: i32 = 337;
@@ -9,7 +8,7 @@ const MG_ROOK_VAL: i32 = 477;
 const EG_ROOK_VAL: i32 = 512;
 const MG_QUEEN_VAL: i32 = 1025;
 const EG_QUEEN_VAL: i32 = 936;
-const MG_KING_VAL: i32 = 0; // King usually has no material value in eval summation (captured = game over)
+const MG_KING_VAL: i32 = 0;
 const EG_KING_VAL: i32 = 0;
 
 pub const MG_PAWN_TABLE: [i32; 64] = [

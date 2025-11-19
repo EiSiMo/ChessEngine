@@ -1,6 +1,4 @@
 use std::mem::size_of;
-// I assume you have a move.rs file.
-// If you call the file "move.rs", you must import it as r#move because "move" is a keyword.
 use crate::r#move::Move;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

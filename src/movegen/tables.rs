@@ -563,15 +563,11 @@ pub const RELEVANT_BITS_BISHOP: [u8; 64] = [
 static ROOK_ATTACKS: OnceLock<Box<[[u64; 4096]; 64]>> = OnceLock::new();
 static BISHOP_ATTACKS: OnceLock<Box<[[u64; 512]; 64]>> = OnceLock::new();
 
-
-// HILFSFUNKTION: Berechnet Turmzüge "langsam"
-// Diese Funktion wird nur beim "Backen" der Tabellen verwendet.
 fn calculate_rook_attacks_slowly(square: usize, blockers: u64) -> u64 {
     let mut attacks = 0_u64;
     let rank = square / 8;
     let file = square % 8;
 
-    // 1. Nach Norden (rank +)
     for r in (rank + 1)..=7 {
         let target_sq = r * 8 + file;
         attacks |= 1_u64 << target_sq;
@@ -580,7 +576,6 @@ fn calculate_rook_attacks_slowly(square: usize, blockers: u64) -> u64 {
         }
     }
 
-    // 2. Nach Süden (rank -)
     for r in (0..rank).rev() {
         let target_sq = r * 8 + file;
         attacks |= 1_u64 << target_sq;
@@ -589,7 +584,6 @@ fn calculate_rook_attacks_slowly(square: usize, blockers: u64) -> u64 {
         }
     }
 
-    // 3. Nach Osten (file +)
     for f in (file + 1)..=7 {
         let target_sq = rank * 8 + f;
         attacks |= 1_u64 << target_sq;
@@ -598,7 +592,6 @@ fn calculate_rook_attacks_slowly(square: usize, blockers: u64) -> u64 {
         }
     }
 
-    // 4. Nach Westen (file -)
     for f in (0..file).rev() {
         let target_sq = rank * 8 + f;
         attacks |= 1_u64 << target_sq;
@@ -611,7 +604,6 @@ fn calculate_rook_attacks_slowly(square: usize, blockers: u64) -> u64 {
 }
 
 fn generate_final_rook_attacks() -> Box<[[u64; 4096]; 64]> {
-    // Heap-Allokation (Dein Code war hier korrekt)
     let mut v: Vec<[u64; 4096]> = Vec::with_capacity(64);
     for _ in 0..64 {
         v.push([0_u64; 4096]);
@@ -620,32 +612,18 @@ fn generate_final_rook_attacks() -> Box<[[u64; 4096]; 64]> {
         panic!("Vec to Box conversion failed.");
     });
 
-    // Haupt-Back-Schleife
     for square_index in 0_usize..=63_usize {
-        let premask = PREMASKS_ROOK[square_index]; // [deine Quelle]
-        let magic = MAGICS_ROOK[square_index]; // [deine Quelle]
-        // ACHTUNG: Hier war ein Fehler in deinem Code, du hattest BISHOP statt ROOK
-        let relevant_bits = RELEVANT_BITS_ROOK[square_index]; // [deine Quelle]
+        let premask = PREMASKS_ROOK[square_index];
+        let magic = MAGICS_ROOK[square_index];
+        let relevant_bits = RELEVANT_BITS_ROOK[square_index];
         let shift = 64 - relevant_bits;
 
-        // Schleife durch alle 2^n Blocker-Kombinationen
         let mut blocker_combination = 0_u64;
         loop {
-            // ---- HIER IST DIE KORREKTE LOGIK ----
-
-            // 1. Berechne die "echten" Züge für diese Blocker-Kombination (der langsame Weg)
             let attack_squares = calculate_rook_attacks_slowly(square_index, blocker_combination);
-
-            // 2. Berechne den "magischen" Speicherort
             let magic_index = (blocker_combination.wrapping_mul(magic)) >> shift;
             let magic_index_as_usize = magic_index as usize;
-
-            // 3. Speichere die echten Züge an diesem magischen Ort
             final_rook_attacks[square_index][magic_index_as_usize] = attack_squares;
-
-            // ---- ENDE DER LOGIK ----
-
-            // Gehe zur nächsten Blocker-Kombination (Dein Code war hier korrekt)
             if blocker_combination == premask {
                 break;
             }
@@ -657,39 +635,31 @@ fn generate_final_rook_attacks() -> Box<[[u64; 4096]; 64]> {
 }
 
 pub fn get_rook_attacks() -> &'static Box<[[u64; 4096]; 64]> {
-    // get_or_init stellt sicher, dass generate_final_rook_attacks()
-    // nur beim allerersten Aufruf ausgeführt wird.
-    // Alle anderen Aufrufe geben sofort die fertige Tabelle zurück.
     ROOK_ATTACKS.get_or_init(generate_final_rook_attacks)
 }
 
-// HILFSFUNKTION: Berechnet Läuferzüge "langsam"
-// Diese Funktion wird nur beim "Backen" der Tabellen verwendet.
 fn calculate_bishop_attacks_slowly(square: usize, blockers: u64) -> u64 {
     let mut attacks = 0_u64;
     let rank = square / 8;
     let file = square % 8;
 
-    // Temporäre Rank/File-Iteratoren
     let (mut r, mut f);
 
-    // 1. Nach Nord-Osten (rank+, file+)
     r = rank + 1;
     f = file + 1;
     while r <= 7 && f <= 7 {
         let target_sq = r * 8 + f;
         attacks |= 1_u64 << target_sq;
         if (blockers >> target_sq) & 1 == 1 {
-            break; // Wir treffen einen Blocker, stopp
+            break;
         }
         r += 1;
         f += 1;
     }
 
-    // 2. Nach Süd-Osten (rank-, file+)
-    r = rank; // Start bei rank, da 0..rank fehlschlägt wenn rank = 0
+    r = rank;
     f = file + 1;
-    while r > 0 && f <= 7 { // r > 0 (da r = rank-1 in der 1. Iteration)
+    while r > 0 && f <= 7 {
         r -= 1;
         let target_sq = r * 8 + f;
         attacks |= 1_u64 << target_sq;
@@ -699,7 +669,6 @@ fn calculate_bishop_attacks_slowly(square: usize, blockers: u64) -> u64 {
         f += 1;
     }
 
-    // 3. Nach Süd-Westen (rank-, file-)
     r = rank;
     f = file;
     while r > 0 && f > 0 { // r > 0 und f > 0
@@ -712,7 +681,6 @@ fn calculate_bishop_attacks_slowly(square: usize, blockers: u64) -> u64 {
         }
     }
 
-    // 4. Nach Nord-Westen (rank+, file-)
     r = rank + 1;
     f = file;
     while r <= 7 && f > 0 { // f > 0
@@ -729,9 +697,6 @@ fn calculate_bishop_attacks_slowly(square: usize, blockers: u64) -> u64 {
 }
 
 fn generate_final_bishop_attacks() -> Box<[[u64; 512]; 64]> {
-    // Heap-Allokation
-    // (Array ist kleiner: 512 statt 4096. Stack Overflow wäre hier unwahrscheinlich,
-    // aber wir bleiben konsistent mit der Turm-Logik.)
     let mut v: Vec<[u64; 512]> = Vec::with_capacity(64);
     for _ in 0..64 {
         v.push([0_u64; 512]);
@@ -740,30 +705,21 @@ fn generate_final_bishop_attacks() -> Box<[[u64; 512]; 64]> {
         panic!("Vec to Box conversion failed for bishops.");
     });
 
-    // Haupt-Back-Schleife
     for square_index in 0_usize..=63_usize {
-        // Verwende die BISHOP-Konstanten aus deiner tables.rs
         let premask = PREMASKS_BISHOP[square_index];
         let magic = MAGICS_BISHOP[square_index];
         let relevant_bits = RELEVANT_BITS_BISHOP[square_index];
         let shift = 64 - relevant_bits;
 
-        // Schleife durch alle 2^n Blocker-Kombinationen
         let mut blocker_combination = 0_u64;
         loop {
-            // 1. Berechne die "echten" Züge für diese Blocker-Kombination (der langsame Weg)
             let attack_squares = calculate_bishop_attacks_slowly(square_index, blocker_combination);
 
-            // 2. Berechne den "magischen" Speicherort
             let magic_index = (blocker_combination.wrapping_mul(magic)) >> shift;
             let magic_index_as_usize = magic_index as usize;
 
-            // 3. Speichere die echten Züge an diesem magischen Ort
-            //    (Stelle sicher, dass magic_index_as_usize < 512 ist,
-            //     was durch korrekte Magics garantiert wird)
             final_bishop_attacks[square_index][magic_index_as_usize] = attack_squares;
 
-            // Gehe zur nächsten Blocker-Kombination
             if blocker_combination == premask {
                 break;
             }
@@ -775,8 +731,5 @@ fn generate_final_bishop_attacks() -> Box<[[u64; 512]; 64]> {
 }
 
 pub fn get_bishop_attacks() -> &'static Box<[[u64; 512]; 64]> {
-    // get_or_init stellt sicher, dass generate_final_bishop_attacks()
-    // nur beim allerersten Aufruf ausgeführt wird.
-    // Alle anderen Aufrufe geben sofort die fertige Tabelle zurück.
     BISHOP_ATTACKS.get_or_init(generate_final_bishop_attacks)
 }

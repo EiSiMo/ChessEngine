@@ -1,11 +1,8 @@
-// uci.rs
-
 use std::io::{self, BufRead};
 use crate::engine::Engine;
 
 pub fn uci_mainloop(engine: &mut Engine) {
     loop {
-        // Start the main UCI loop
         for line in io::stdin().lock().lines() {
             let input = line.unwrap_or_else(|_| "quit".to_string());
             let tokens: Vec<&str> = input.split_whitespace().collect();
@@ -41,7 +38,6 @@ pub fn uci_mainloop(engine: &mut Engine) {
                     }
                 }
                 "go" => {
-                    // TODO add a lot functionality
                     println!("bestmove {}", engine.search(1000_u64));
                 }
                 "stop" => {
