@@ -1,6 +1,6 @@
 use crate::board::Board;
-use crate::movegen::non_sliders::{generate_king_moves, generate_knight_moves};
-use crate::movegen::pawns::generate_pawn_moves;
+use crate::movegen::non_sliders::*;
+use crate::movegen::pawns::*;
 use crate::movegen::sliders::*;
 use crate::r#move::{Move, MoveList};
 
@@ -30,12 +30,12 @@ impl GenStage {
     }
 }
 
-pub struct MoveGenerator {
+pub struct MovePicker {
     buffer: MoveList,
     stage: GenStage,
 }
 
-impl MoveGenerator {
+impl MovePicker {
     pub fn new() -> Self {
         Self {
             buffer: MoveList::new(),

@@ -1,5 +1,5 @@
 use chess_engine::board::Board;
-use chess_engine::movegen::picker::MoveGenerator;
+use chess_engine::movegen::picker::MovePicker;
 use chess_engine::movegen::legal_check::is_other_king_attacked;
 use criterion::{criterion_group, criterion_main, Criterion};
 
@@ -8,7 +8,7 @@ fn count_legal_moves_recursive(board: &mut Board, depth: u8) -> u64 {
         return 1_u64;
     }
 
-    let mut generator = MoveGenerator::new();
+    let mut generator = MovePicker::new();
     let mut leaf_nodes = 0_u64;
 
     while let Some(mv) = generator.next(board) {

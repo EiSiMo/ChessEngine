@@ -99,7 +99,7 @@ def main():
 
     try:
         # The suite_score is still a raw float, e.g., 95.5
-        suite_score = float(suite_result.stdout.strip())
+        suite_score = float(suite_result.stdout.strip().splitlines()[-1].strip())
     except ValueError:
         print(f"Error: Could not convert suite output to a number.")
         print(f"Received: '{suite_result.stdout}'")

@@ -2,7 +2,7 @@ use crate::board::{Board, Color};
 use crate::eval::evaluate_board;
 use crate::movegen::legal_check::*;
 use crate::r#move::Move;
-use crate::movegen::picker::MoveGenerator;
+use crate::movegen::picker::MovePicker;
 use crate::tt::{TranspositionTable, NodeType};
 use std::time::{Instant, Duration};
 
@@ -90,7 +90,7 @@ pub fn alpha_beta(
     let mut legal_moves_found = false;
     let alpha_orig = alpha;
 
-    let mut picker = MoveGenerator::new();
+    let mut picker = MovePicker::new();
     let mut moves_tried = 0;
 
     loop {

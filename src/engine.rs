@@ -3,6 +3,7 @@ use crate::r#move::Move;
 use crate::search::alpha_beta;
 use crate::tt::TranspositionTable; // Import TT
 use std::time::{Instant, Duration};
+use crate::uci::UCI;
 
 pub struct Engine {
     pub name: String,
@@ -43,7 +44,8 @@ impl Engine {
         let time_limit = Duration::from_millis(time_limit_ms);
 
         let mut nodes = 0;
-        
+
+        // Initial search at depth 1
         let (mut opt_move, mut _score) = alpha_beta(
             &mut self.board,
             1,
@@ -56,8 +58,12 @@ impl Engine {
             &mut self.tt
         );
 
+        // If we timed out immediately at depth 1 (very rare), opt_move might be None.
+        // But usually, we have at least one move here.
+
         let mut depth = 2;
 
+        // Iterative Deepening
         while start_time.elapsed() < time_limit {
             let (new_move, new_score) = alpha_beta(
                 &mut self.board,
@@ -71,12 +77,18 @@ impl Engine {
                 &mut self.tt
             );
 
-            if start_time.elapsed() > time_limit {
+            // FIX: Only update if we actually got a move back (didn't timeout)
+            if let Some(mv) = new_move {
+                opt_move = Some(mv);
+                _score = new_score;
+
+                // Optional: Move send_info here to update the GUI after every completed depth
+                UCI::send_info(Some(depth as usize), Some(nodes), None, None, None, None);
+            } else {
+                // If new_move is None, the search was aborted due to time.
+                // We discard the partial results and stop increasing depth.
                 break;
             }
-
-            opt_move = new_move;
-            _score = new_score;
 
             depth += 1;
         }
@@ -84,6 +96,8 @@ impl Engine {
         if let Some(mv) = opt_move {
             mv.to_algebraic()
         } else {
+            // Fallback: If even depth 1 failed (e.g. 0ms time limit), try to return *any* legal move
+            // or just return null if truly nothing works.
             "null".to_string()
         }
     }
